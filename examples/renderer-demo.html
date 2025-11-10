@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ghostty WASM - Canvas Renderer Demo</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            max-width: 1400px;
+            margin: 20px auto;
+            padding: 0 20px;
+            background: #1e1e1e;
+            color: #d4d4d4;
+        }
+        h1 { color: #4ec9b0; }
+        h2 { color: #569cd6; margin-top: 30px; }
+        
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .panel {
+            background: #252526;
+            border: 1px solid #3e3e42;
+            border-radius: 6px;
+            padding: 20px;
+        }
+        
+        .full-width {
+            grid-column: 1 / -1;
+        }
+        
+        canvas {
+            display: block;
+            border: 2px solid #3e3e42;
+            border-radius: 4px;
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+            margin: 10px 0;
+        }
+        
+        button {
+            background: #0e639c;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px 5px 5px 0;
+        }
+        button:hover { background: #1177bb; }
+        button.secondary { background: #3a3a3c; }
+        button.secondary:hover { background: #4a4a4c; }
+        button.danger { background: #c72e0f; }
+        button.danger:hover { background: #e03e1f; }
+        
+        .info {
+            background: #1e3a5f;
+            border-left: 4px solid #4ec9b0;
+            padding: 12px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        
+        .success {
+            background: #1a3d1a;
+            border-left: 4px solid #0dbc79;
+            padding: 12px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        
+        .error {
+            background: #3d1a1a;
+            border-left: 4px solid #f14c4c;
+            padding: 12px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin: 15px 0;
+        }
+        
+        .stat {
+            background: #2d2d30;
+            padding: 10px;
+            border-radius: 4px;
+            text-align: center;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 5px;
+        }
+        
+        .stat-value {
+            font-size: 20px;
+            font-weight: bold;
+            color: #4ec9b0;
+        }
+        
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 15px 0;
+        }
+        
+        select, input[type="number"], input[type="color"] {
+            background: #3c3c3c;
+            color: #d4d4d4;
+            border: 1px solid #3e3e42;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .color-palette {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 5px;
+            margin: 10px 0;
+        }
+        
+        .color-swatch {
+            aspect-ratio: 1;
+            border-radius: 4px;
+            border: 1px solid #3e3e42;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            color: #fff;
+            text-shadow: 0 0 2px #000;
+        }
+        
+        .performance-monitor {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(37, 37, 38, 0.95);
+            border: 1px solid #3e3e42;
+            border-radius: 6px;
+            padding: 15px;
+            min-width: 150px;
+            z-index: 1000;
+        }
+        
+        .fps {
+            font-size: 24px;
+            font-weight: bold;
+            color: #4ec9b0;
+        }
+        
+        code {
+            background: #1e1e1e;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Consolas', monospace;
+            color: #ce9178;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎨 Canvas Renderer Demo</h1>
+    
+    <div id="status" class="info">
+        Loading renderer...
+    </div>
+    
+    <!-- Performance Monitor -->
+    <div class="performance-monitor">
+        <div class="stat-label">FPS</div>
+        <div class="fps" id="fps">0</div>
+        <div class="stat-label" style="margin-top: 10px;">Render Time</div>
+        <div id="render-time" style="color: #569cd6;">0ms</div>
+    </div>
+    
+    <!-- Main Canvas -->
+    <div class="panel full-width">
+        <h2>Terminal Canvas</h2>
+        <canvas id="terminal-canvas"></canvas>
+        
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-label">Canvas Size</div>
+                <div class="stat-value" id="canvas-size">0x0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Cell Size</div>
+                <div class="stat-value" id="cell-size">0x0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Cursor Pos</div>
+                <div class="stat-value" id="cursor-pos">0, 0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">DPI Ratio</div>
+                <div class="stat-value" id="dpi-ratio">1.0</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="container">
+        <!-- Controls -->
+        <div class="panel">
+            <h2>Controls</h2>
+            
+            <h3>Font Settings</h3>
+            <div class="controls">
+                <label>
+                    Font Size:
+                    <input type="number" id="font-size" value="15" min="8" max="32" step="1">
+                </label>
+                <label>
+                    Font Family:
+                    <select id="font-family">
+                        <option value="monospace">Monospace</option>
+                        <option value="'Courier New', monospace">Courier New</option>
+                        <option value="'Consolas', monospace">Consolas</option>
+                        <option value="'Monaco', monospace">Monaco</option>
+                    </select>
+                </label>
+            </div>
+            
+            <h3>Cursor Style</h3>
+            <div class="controls">
+                <button onclick="setCursorStyle('block')">Block</button>
+                <button onclick="setCursorStyle('underline')">Underline</button>
+                <button onclick="setCursorStyle('bar')">Bar</button>
+                <label>
+                    <input type="checkbox" id="cursor-blink" onchange="toggleCursorBlink()">
+                    Blink
+                </label>
+            </div>
+            
+            <h3>Theme</h3>
+            <div class="controls">
+                <label>
+                    Background:
+                    <input type="color" id="bg-color" value="#1e1e1e" onchange="updateTheme()">
+                </label>
+                <label>
+                    Foreground:
+                    <input type="color" id="fg-color" value="#d4d4d4" onchange="updateTheme()">
+                </label>
+                <label>
+                    Cursor:
+                    <input type="color" id="cursor-color" value="#ffffff" onchange="updateTheme()">
+                </label>
+            </div>
+        </div>
+        
+        <!-- Test Scenarios -->
+        <div class="panel">
+            <h2>Test Scenarios</h2>
+            
+            <button onclick="testBasicText()">1. Basic Text</button>
+            <button onclick="testColors()">2. All Colors</button>
+            <button onclick="testStyles()">3. Text Styles</button>
+            <button onclick="testWideChars()">4. Wide Characters</button>
+            <button onclick="testMixedContent()">5. Mixed Content</button>
+            <button onclick="testPerformance()">6. Performance Test</button>
+            <button onclick="testCursorStyles()">7. Cursor Styles</button>
+            <button class="danger" onclick="clearBuffer()">Clear All</button>
+        </div>
+    </div>
+    
+    <!-- Color Palette Display -->
+    <div class="panel full-width">
+        <h2>16 ANSI Color Palette</h2>
+        <div class="color-palette" id="color-palette"></div>
+    </div>
+    
+    <script type="module">
+        import { ScreenBuffer } from '../lib/buffer.ts';
+        import { CanvasRenderer, DEFAULT_THEME } from '../lib/renderer.ts';
+        
+        // Global state
+        let buffer = null;
+        let renderer = null;
+        let animationFrameId = null;
+        let lastFrameTime = 0;
+        let frameCount = 0;
+        let fps = 0;
+        
+        // Initialize
+        async function init() {
+            try {
+                const canvas = document.getElementById('terminal-canvas');
+                
+                // Create buffer (80x24)
+                buffer = new ScreenBuffer(80, 24, 1000);
+                window.buffer = buffer; // For debugging
+                
+                // Create renderer
+                renderer = new CanvasRenderer(canvas, {
+                    fontSize: 15,
+                    fontFamily: 'monospace',
+                    cursorStyle: 'block',
+                    cursorBlink: false,
+                });
+                window.renderer = renderer; // For debugging
+                
+                // Initial render
+                console.log('Starting render loop...');
+                renderFrame();
+                
+                // Update stats
+                updateStats();
+                console.log('Stats updated');
+                
+                // Display color palette
+                displayColorPalette();
+                console.log('Palette displayed');
+                
+                // Success message
+                document.getElementById('status').className = 'success';
+                document.getElementById('status').textContent = '✅ Renderer loaded successfully! Try the test scenarios below.';
+                
+                // Force initial render with all lines
+                renderer.render(buffer, true);
+                
+                console.log('✅ Canvas renderer demo initialized');
+                console.log('Buffer:', buffer);
+                console.log('Renderer:', renderer);
+                console.log('Canvas dimensions:', canvas.width, 'x', canvas.height);
+                console.log('Canvas CSS size:', canvas.style.width, 'x', canvas.style.height);
+            } catch (error) {
+                document.getElementById('status').className = 'error';
+                document.getElementById('status').textContent = `❌ Error: ${error.message}`;
+                console.error('Failed to initialize:', error);
+            }
+        }
+        
+        // Render loop
+        function renderFrame(timestamp = 0) {
+            // Calculate FPS
+            if (timestamp) {
+                const delta = timestamp - lastFrameTime;
+                frameCount++;
+                
+                if (delta >= 1000) {
+                    fps = Math.round((frameCount * 1000) / delta);
+                    document.getElementById('fps').textContent = fps;
+                    frameCount = 0;
+                    lastFrameTime = timestamp;
+                }
+            } else {
+                lastFrameTime = timestamp;
+            }
+            
+            // Render
+            const startTime = performance.now();
+            renderer.render(buffer);
+            const renderTime = (performance.now() - startTime).toFixed(2);
+            document.getElementById('render-time').textContent = `${renderTime}ms`;
+            
+            // Continue loop
+            animationFrameId = requestAnimationFrame(renderFrame);
+        }
+        
+        function updateStats() {
+            const dims = buffer.getDimensions();
+            const cursor = buffer.getCursor();
+            const metrics = renderer.getMetrics();
+            
+            document.getElementById('canvas-size').textContent = `${dims.cols}x${dims.rows}`;
+            document.getElementById('cell-size').textContent = `${metrics.width}x${metrics.height}`;
+            document.getElementById('cursor-pos').textContent = `${cursor.x}, ${cursor.y}`;
+            document.getElementById('dpi-ratio').textContent = window.devicePixelRatio.toFixed(1);
+        }
+        
+        function displayColorPalette() {
+            const palette = document.getElementById('color-palette');
+            const colors = [
+                'Black', 'Red', 'Green', 'Yellow', 'Blue', 'Magenta', 'Cyan', 'White',
+                'Bright Black', 'Bright Red', 'Bright Green', 'Bright Yellow',
+                'Bright Blue', 'Bright Magenta', 'Bright Cyan', 'Bright White'
+            ];
+            const values = [
+                DEFAULT_THEME.black, DEFAULT_THEME.red, DEFAULT_THEME.green, DEFAULT_THEME.yellow,
+                DEFAULT_THEME.blue, DEFAULT_THEME.magenta, DEFAULT_THEME.cyan, DEFAULT_THEME.white,
+                DEFAULT_THEME.brightBlack, DEFAULT_THEME.brightRed, DEFAULT_THEME.brightGreen,
+                DEFAULT_THEME.brightYellow, DEFAULT_THEME.brightBlue, DEFAULT_THEME.brightMagenta,
+                DEFAULT_THEME.brightCyan, DEFAULT_THEME.brightWhite
+            ];
+            
+            colors.forEach((name, i) => {
+                const swatch = document.createElement('div');
+                swatch.className = 'color-swatch';
+                swatch.style.background = values[i];
+                swatch.title = `${name}: ${values[i]}`;
+                swatch.textContent = i;
+                palette.appendChild(swatch);
+            });
+        }
+        
+        // Helper function for clearing
+        function clearBufferHelper() {
+            buffer.eraseInDisplay(2); // Clear entire screen
+            buffer.moveCursorTo(0, 0); // Reset cursor to top-left
+            buffer.resetStyle();
+            updateStats();
+        }
+        
+        // Test scenarios
+        window.testBasicText = function() {
+            console.log('🧪 Test 1: Basic Text - Starting');
+            clearBufferHelper();
+            buffer.writeString('Hello, World!');
+            buffer.writeString('\nThis is a basic text test.');
+            buffer.writeString('\nThe quick brown fox jumps over the lazy dog.');
+            updateStats();
+            console.log('✅ Test 1: Complete');
+        };
+        
+        window.testColors = function() {
+            clearBufferHelper();
+            buffer.writeString('ANSI Colors:\n\n');
+            
+            for (let i = 0; i < 16; i++) {
+                buffer.setStyle({ fg: { type: 'palette', index: i } });
+                buffer.writeString(`Color ${i.toString().padStart(2, '0')} `);
+                if ((i + 1) % 8 === 0) buffer.writeString('\n');
+            }
+            
+            buffer.writeString('\n\nRGB Colors:\n');
+            buffer.setStyle({ fg: { type: 'rgb', r: 255, g: 0, b: 0 } });
+            buffer.writeString('Red ');
+            buffer.setStyle({ fg: { type: 'rgb', r: 0, g: 255, b: 0 } });
+            buffer.writeString('Green ');
+            buffer.setStyle({ fg: { type: 'rgb', r: 0, g: 0, b: 255 } });
+            buffer.writeString('Blue');
+            
+            buffer.resetStyle();
+            updateStats();
+        };
+        
+        window.testStyles = function() {
+            clearBufferHelper();
+            buffer.writeString('Text Styles:\n\n');
+            
+            buffer.setStyle({ bold: true });
+            buffer.writeString('Bold text\n');
+            buffer.resetStyle();
+            
+            buffer.setStyle({ italic: true });
+            buffer.writeString('Italic text\n');
+            buffer.resetStyle();
+            
+            buffer.setStyle({ underline: true });
+            buffer.writeString('Underlined text\n');
+            buffer.resetStyle();
+            
+            buffer.setStyle({ strikethrough: true });
+            buffer.writeString('Strikethrough text\n');
+            buffer.resetStyle();
+            
+            buffer.setStyle({ faint: true });
+            buffer.writeString('Faint text\n');
+            buffer.resetStyle();
+            
+            buffer.setStyle({ inverse: true });
+            buffer.writeString('Inverse text\n');
+            buffer.resetStyle();
+            
+            buffer.setStyle({ bold: true, underline: true, fg: { type: 'palette', index: 1 } });
+            buffer.writeString('Combined styles\n');
+            buffer.resetStyle();
+            
+            updateStats();
+        };
+        
+        window.testWideChars = function() {
+            clearBufferHelper();
+            buffer.writeString('Wide Characters:\n\n');
+            buffer.writeString('Chinese: 你好世界\n');
+            buffer.writeString('Japanese: こんにちは\n');
+            buffer.writeString('Korean: 안녕하세요\n');
+            buffer.writeString('Emoji: 😀 🎨 🚀 ✨\n');
+            buffer.writeString('Mixed: Hello世界! ABC中文123\n');
+            updateStats();
+        };
+        
+        window.testMixedContent = function() {
+            clearBufferHelper();
+            
+            // Header with colors
+            buffer.setStyle({ bold: true, fg: { type: 'palette', index: 4 } });
+            buffer.writeString('=== Terminal Renderer Demo ===\n\n');
+            buffer.resetStyle();
+            
+            // Colored line
+            buffer.setStyle({ fg: { type: 'palette', index: 2 } });
+            buffer.writeString('✓ ');
+            buffer.resetStyle();
+            buffer.writeString('Task completed successfully\n');
+            
+            // Warning line
+            buffer.setStyle({ fg: { type: 'palette', index: 3 } });
+            buffer.writeString('⚠ ');
+            buffer.resetStyle();
+            buffer.writeString('Warning: This is a test\n');
+            
+            // Error line
+            buffer.setStyle({ fg: { type: 'palette', index: 1 } });
+            buffer.writeString('✗ ');
+            buffer.resetStyle();
+            buffer.writeString('Error: Something failed\n\n');
+            
+            // Code block
+            buffer.setStyle({ bg: { type: 'palette', index: 8 } });
+            buffer.writeString(' const hello = "world"; ');
+            buffer.resetStyle();
+            buffer.writeString('\n\n');
+            
+            // Wide characters with color
+            buffer.setStyle({ fg: { type: 'palette', index: 5 } });
+            buffer.writeString('中文 ');
+            buffer.setStyle({ fg: { type: 'palette', index: 6 } });
+            buffer.writeString('日本語 ');
+            buffer.setStyle({ fg: { type: 'palette', index: 4 } });
+            buffer.writeString('한글\n');
+            buffer.resetStyle();
+            
+            updateStats();
+        };
+        
+        window.testPerformance = function() {
+            clearBufferHelper();
+            buffer.writeString('Performance Test: Filling buffer...\n\n');
+            
+            const start = performance.now();
+            
+            // Fill buffer with text and colors
+            for (let y = 2; y < 24; y++) {
+                for (let x = 0; x < 80; x++) {
+                    const colorIndex = (x + y) % 16;
+                    buffer.setStyle({ fg: { type: 'palette', index: colorIndex } });
+                    buffer.writeChar(String.fromCharCode(33 + (x % 94)));
+                }
+            }
+            
+            const elapsed = (performance.now() - start).toFixed(2);
+            buffer.resetStyle();
+            buffer.moveCursorTo(0, 0);
+            buffer.writeString(`Performance Test: ${elapsed}ms to fill buffer     `);
+            
+            updateStats();
+        };
+        
+        window.testCursorStyles = function() {
+            clearBufferHelper();
+            buffer.writeString('Cursor Styles Demo:\n\n');
+            buffer.writeString('Use the cursor style buttons above to test:\n');
+            buffer.writeString('- Block cursor (default)\n');
+            buffer.writeString('- Underline cursor\n');
+            buffer.writeString('- Bar cursor\n');
+            buffer.writeString('- Blinking (checkbox)\n');
+            updateStats();
+        };
+        
+        window.clearBuffer = function() {
+            clearBufferHelper();
+        };
+        
+        // Controls
+        window.setCursorStyle = function(style) {
+            renderer.setCursorStyle(style);
+            // Force re-render to show new cursor style
+            renderer.render(buffer, true);
+        };
+        
+        window.toggleCursorBlink = function() {
+            const enabled = document.getElementById('cursor-blink').checked;
+            renderer.setCursorBlink(enabled);
+            // Force re-render
+            renderer.render(buffer, true);
+        };
+        
+        window.updateTheme = function() {
+            const bg = document.getElementById('bg-color').value;
+            const fg = document.getElementById('fg-color').value;
+            const cursor = document.getElementById('cursor-color').value;
+            
+            renderer.setTheme({
+                background: bg,
+                foreground: fg,
+                cursor: cursor,
+            });
+            // Force re-render to show new theme
+            renderer.render(buffer, true);
+        };
+        
+        // Font controls
+        document.getElementById('font-size').addEventListener('change', (e) => {
+            renderer.setFontSize(parseInt(e.target.value));
+            renderer.render(buffer, true);
+            updateStats();
+        });
+        
+        document.getElementById('font-family').addEventListener('change', (e) => {
+            renderer.setFontFamily(e.target.value);
+            renderer.render(buffer, true);
+            updateStats();
+        });
+        
+        // Start
+        init();
+    </script>
+</body>
+</html>
