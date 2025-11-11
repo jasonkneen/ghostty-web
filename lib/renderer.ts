@@ -257,10 +257,24 @@ export class CanvasRenderer {
       }
     }
     
+    // Check if we need to redraw selection-affected lines
+    const hasSelection = this.selectionManager && this.selectionManager.hasSelection();
+    let selectionRows = new Set<number>();
+    if (hasSelection) {
+      const coords = this.selectionManager!.getSelectionCoords();
+      if (coords) {
+        for (let row = coords.startRow; row <= coords.endRow; row++) {
+          selectionRows.add(row);
+        }
+      }
+    }
+    
     // Render each line
     for (let y = 0; y < dims.rows; y++) {
-      // Only render dirty lines for performance (unless forcing all)
-      if (!forceAll && !buffer.isRowDirty(y)) {
+      // Render if dirty OR if it has selection
+      const needsRender = forceAll || buffer.isRowDirty(y) || selectionRows.has(y);
+      
+      if (!needsRender) {
         continue;
       }
       
@@ -270,8 +284,8 @@ export class CanvasRenderer {
       }
     }
     
-    // Render selection highlight (if any)
-    if (this.selectionManager && this.selectionManager.hasSelection()) {
+    // Render selection highlight AFTER all text (so it overlays)
+    if (hasSelection) {
       this.renderSelection(dims.cols);
     }
     
@@ -544,10 +558,15 @@ export class CanvasRenderer {
     
     const { startCol, startRow, endCol, endRow } = coords;
     
+    // Debug: log selection coordinates
+    console.log(`Rendering selection: rows ${startRow}-${endRow}, cols ${startCol}-${endCol}`);
+    
     // Use semi-transparent fill for selection
     this.ctx.save();
     this.ctx.fillStyle = this.theme.selectionBackground;
     this.ctx.globalAlpha = 0.5; // Make it semi-transparent so text is visible
+    
+    console.log(`Selection color: ${this.theme.selectionBackground}, alpha: ${this.ctx.globalAlpha}`);
     
     for (let row = startRow; row <= endRow; row++) {
       const colStart = (row === startRow) ? startCol : 0;
@@ -558,10 +577,12 @@ export class CanvasRenderer {
       const width = (colEnd - colStart + 1) * this.metrics.width;
       const height = this.metrics.height;
       
+      console.log(`Drawing selection rect: x=${x}, y=${y}, w=${width}, h=${height}`);
       this.ctx.fillRect(x, y, width, height);
     }
     
     this.ctx.restore();
+    console.log('Selection rendering complete');
   }
   
   /**

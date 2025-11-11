@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<body>
+<canvas id="test" width="400" height="200"></canvas>
+<script>
+const canvas = document.getElementById('test');
+const ctx = canvas.getContext('2d');
+
+// Draw background
+ctx.fillStyle = '#1e1e1e';
+ctx.fillRect(0, 0, 400, 200);
+
+// Draw some text
+ctx.fillStyle = '#ffffff';
+ctx.font = '14px monospace';
+ctx.fillText('Hello, World!', 10, 50);
+
+// Draw semi-transparent selection overlay
+ctx.save();
+ctx.fillStyle = '#264f78';
+ctx.globalAlpha = 0.5;
+ctx.fillRect(5, 30, 150, 30);
+ctx.restore();
+
+console.log('Test: selection should be semi-transparent blue over white text');
+</script>
+</body>
+</html>

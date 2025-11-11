@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Selection Test</title>
+  <style>
+    body { background: #000; color: #fff; font-family: monospace; padding: 20px; }
+    #terminal { border: 1px solid #444; }
+    .info { margin: 20px 0; padding: 10px; background: #222; }
+    button { margin: 5px; padding: 10px; }
+  </style>
+</head>
+<body>
+  <h1>Text Selection Test</h1>
+  
+  <div class="info">
+    <h3>Instructions:</h3>
+    <ol>
+      <li>Click and drag to select text in the terminal below</li>
+      <li>Selection should appear as semi-transparent blue overlay</li>
+      <li>Text should still be visible under selection</li>
+      <li>Right-click should copy text to clipboard</li>
+      <li>Open browser console (F12) to see debug logs</li>
+    </ol>
+  </div>
+  
+  <div id="terminal"></div>
+  
+  <div class="info">
+    <h3>Test API:</h3>
+    <button onclick="testSelectAll()">Select All</button>
+    <button onclick="testClearSelection()">Clear Selection</button>
+    <button onclick="testGetSelection()">Get Selection</button>
+    <button onclick="testHasSelection()">Has Selection?</button>
+  </div>
+  
+  <div class="info" id="output"></div>
+  
+  <script type="module">
+    import { Terminal } from './lib/index.ts';
+    
+    const term = new Terminal({
+      cols: 80,
+      rows: 24,
+      cursorBlink: true,
+      fontSize: 14,
+      theme: {
+        background: '#1e1e1e',
+        foreground: '#d4d4d4',
+        selectionBackground: '#264f78',
+      },
+      wasmPath: './ghostty-vt.wasm',
+    });
+    
+    await term.open(document.getElementById('terminal'));
+    
+    // Write some test content
+    term.write('Welcome to the selection test!\r\n');
+    term.write('\r\n');
+    term.write('Try selecting this text with your mouse.\r\n');
+    term.write('Double-click to select a single word.\r\n');
+    term.write('Right-click to copy selected text.\r\n');
+    term.write('\r\n');
+    term.write('Some UTF-8 text: Hello 世界 🎉 Привет\r\n');
+    term.write('\r\n');
+    term.write('$ ls -la\r\n');
+    term.write('drwxr-xr-x  5 user  staff   160 Nov 11 10:00 .\r\n');
+    term.write('drwxr-xr-x  3 user  staff    96 Nov 11 09:00 ..\r\n');
+    term.write('-rw-r--r--  1 user  staff  1234 Nov 11 10:00 file.txt\r\n');
+    
+    // Make terminal available globally for testing
+    window.term = term;
+    window.testSelectAll = () => {
+      term.selectAll();
+      updateOutput('Called selectAll()');
+    };
+    window.testClearSelection = () => {
+      term.clearSelection();
+      updateOutput('Called clearSelection()');
+    };
+    window.testGetSelection = () => {
+      const text = term.getSelection();
+      updateOutput(`Selected text: "${text}"`);
+      console.log('Selected text:', text);
+    };
+    window.testHasSelection = () => {
+      const has = term.hasSelection();
+      updateOutput(`Has selection: ${has}`);
+    };
+    
+    function updateOutput(msg) {
+      document.getElementById('output').innerHTML = '<p>' + msg + '</p>';
+    }
+    
+    // Listen for selection changes
+    term.onSelectionChange(() => {
+      console.log('Selection changed!');
+      const text = term.getSelection();
+      updateOutput(`Selection changed. Text: "${text.substring(0, 50)}${text.length > 50 ? '...' : ''}"`);
+    });
+    
+    console.log('Terminal loaded. Try selecting text!');
+  </script>
+</body>
+</html>

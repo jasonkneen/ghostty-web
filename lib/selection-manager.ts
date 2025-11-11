@@ -219,6 +219,19 @@ export class SelectionManager {
         }
       }
     });
+    
+    // Right-click (context menu) - copy selection if exists
+    canvas.addEventListener('contextmenu', (e: MouseEvent) => {
+      e.preventDefault(); // Prevent default context menu
+      
+      if (this.hasSelection()) {
+        const text = this.getSelection();
+        if (text) {
+          this.copyToClipboard(text);
+          console.log('Copied selection to clipboard (via right-click)');
+        }
+      }
+    });
   }
   
   /**
@@ -303,7 +316,14 @@ export class SelectionManager {
    * Request a render update (triggers selection overlay redraw)
    */
   private requestRender(): void {
-    // The terminal's render loop will pick up the selection on next frame
-    // No need to force a render - it happens automatically at 60fps
+    // Force a full render to update selection overlay
+    // We need this because selection isn't tied to dirty lines
+    if (this.wasmTerm) {
+      // Trigger a render by requesting animation frame
+      // The renderer's render loop runs at 60fps and will pick this up
+      requestAnimationFrame(() => {
+        // Render happens automatically in terminal's render loop
+      });
+    }
   }
 }
