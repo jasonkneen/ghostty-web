@@ -313,6 +313,21 @@ describe('InputHandler', () => {
       // Ctrl+Z should produce 0x1A (26)
       expect(dataReceived[0].charCodeAt(0)).toBe(0x1A);
     });
+
+    test('Cmd+C allows copy (no data sent)', () => {
+      const handler = new InputHandler(
+        ghostty,
+        container as any,
+        (data) => dataReceived.push(data),
+        () => { bellCalled = true; }
+      );
+
+      simulateKey(container, createKeyEvent('KeyC', 'c', { meta: true }));
+      
+      // Cmd+C should NOT send data - it should allow copy operation
+      // SelectionManager handles the actual copying
+      expect(dataReceived.length).toBe(0);
+    });
   });
 
   describe('Special Keys', () => {

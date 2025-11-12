@@ -248,10 +248,11 @@ export class InputHandler {
    * @returns true if printable character
    */
   private isPrintableCharacter(event: KeyboardEvent): boolean {
-    // If Ctrl or Alt is pressed (but not AltGr which is Ctrl+Alt on some keyboards)
-    // then it's not a simple printable character
+    // If Ctrl, Alt, or Meta (Cmd on Mac) is pressed, it's not a simple printable character
+    // Exception: AltGr (Ctrl+Alt on some keyboards) can produce printable characters
     if (event.ctrlKey && !event.altKey) return false;
     if (event.altKey && !event.ctrlKey) return false;
+    if (event.metaKey) return false; // Cmd key on Mac
 
     // If key produces a single printable character
     return event.key.length === 1;
@@ -268,6 +269,15 @@ export class InputHandler {
     if ((event.ctrlKey || event.metaKey) && event.code === 'KeyV') {
       // Let the browser's native paste event fire
       console.log('[InputHandler] ⌨️  Ctrl/Cmd+V detected, allowing paste event');
+      return;
+    }
+
+    // Allow Cmd+C for copy (on Mac, Cmd+C should copy, not send interrupt)
+    // SelectionManager handles the actual copying
+    // Note: Ctrl+C on all platforms sends interrupt signal (0x03)
+    if (event.metaKey && event.code === 'KeyC') {
+      // Let browser/SelectionManager handle copy
+      console.log('[InputHandler] ⌨️  Cmd+C detected, allowing copy');
       return;
     }
 
