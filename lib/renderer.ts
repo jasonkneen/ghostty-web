@@ -10,10 +10,10 @@
  * - Dirty line optimization for 60 FPS
  */
 
-import type { GhosttyCell } from './types';
-import { CellFlags } from './types';
 import type { ITheme } from './interfaces';
 import type { SelectionManager } from './selection-manager';
+import type { GhosttyCell } from './types';
+import { CellFlags } from './types';
 
 // Interface for objects that can be rendered
 export interface IRenderable {

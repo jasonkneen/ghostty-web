@@ -14,7 +14,7 @@
 
 import { spawn } from 'child_process';
 import { homedir } from 'os';
-import { resolve, join } from 'path';
+import { join, resolve } from 'path';
 
 // ============================================================================
 // Configuration
@@ -194,7 +194,7 @@ async function executeCommand(
 // WebSocket Server
 // ============================================================================
 
-let server;
+let server: any;
 
 try {
   server = Bun.serve({

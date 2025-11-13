@@ -6,18 +6,18 @@
  */
 
 import {
+  CellFlags,
+  type Cursor,
+  type GhosttyCell,
   type GhosttyWasmExports,
+  KeyEncoderOption,
+  type KeyEvent,
+  type KittyKeyFlags,
+  type RGB,
+  type RGBColor,
   type SgrAttribute,
   SgrAttributeTag,
-  type RGBColor,
-  type KeyEvent,
-  KeyEncoderOption,
-  type KittyKeyFlags,
   type TerminalHandle,
-  type GhosttyCell,
-  type Cursor,
-  type RGB,
-  CellFlags,
 } from './types';
 
 // Re-export types for convenience

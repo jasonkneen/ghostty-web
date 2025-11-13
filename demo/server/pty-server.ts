@@ -85,8 +85,8 @@ const server = Bun.serve({
 
     if (url.pathname === '/ws') {
       // Parse terminal size from query parameters before upgrade
-      const cols = parseInt(url.searchParams.get('cols') || '80');
-      const rows = parseInt(url.searchParams.get('rows') || '24');
+      const cols = Number.parseInt(url.searchParams.get('cols') || '80');
+      const rows = Number.parseInt(url.searchParams.get('rows') || '24');
 
       // Pass size data to WebSocket via upgrade data
       const success = server.upgrade(req, {

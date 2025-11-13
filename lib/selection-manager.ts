@@ -9,12 +9,12 @@
  * - Visual selection overlay (rendered by CanvasRenderer)
  */
 
-import type { Terminal } from './terminal';
-import type { CanvasRenderer } from './renderer';
-import type { GhosttyTerminal } from './ghostty';
-import type { GhosttyCell } from './types';
-import type { IEvent } from './interfaces';
 import { EventEmitter } from './event-emitter';
+import type { GhosttyTerminal } from './ghostty';
+import type { IEvent } from './interfaces';
+import type { CanvasRenderer } from './renderer';
+import type { Terminal } from './terminal';
+import type { GhosttyCell } from './types';
 
 // ============================================================================
 // Type Definitions

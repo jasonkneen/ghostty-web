@@ -6,7 +6,7 @@
  * For full integration tests, see examples/terminal-demo.html
  */
 
-import { describe, test, expect, beforeEach, afterEach } from 'bun:test';
+import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
 import { FitAddon } from './fit';
 
 // ============================================================================

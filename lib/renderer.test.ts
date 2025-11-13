@@ -6,7 +6,7 @@
  * Full visual tests are in examples/renderer-demo.html
  */
 
-import { describe, test, expect } from 'bun:test';
+import { describe, expect, test } from 'bun:test';
 import { DEFAULT_THEME } from './renderer';
 
 describe('CanvasRenderer', () => {

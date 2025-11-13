@@ -12,18 +12,18 @@
  * ```
  */
 
-import { Ghostty, GhosttyTerminal } from './ghostty';
-import { CanvasRenderer } from './renderer';
-import { InputHandler } from './input-handler';
-import { SelectionManager } from './selection-manager';
 import { EventEmitter } from './event-emitter';
+import { Ghostty, type GhosttyTerminal } from './ghostty';
+import { InputHandler } from './input-handler';
 import type {
-  ITerminalOptions,
-  ITerminalCore,
-  ITerminalAddon,
-  IEvent,
   IDisposable,
+  IEvent,
+  ITerminalAddon,
+  ITerminalCore,
+  ITerminalOptions,
 } from './interfaces';
+import { CanvasRenderer } from './renderer';
+import { SelectionManager } from './selection-manager';
 
 // ============================================================================
 // Terminal Class

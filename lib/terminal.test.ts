@@ -6,7 +6,7 @@
  * since they require a full browser environment with canvas.
  */
 
-import { describe, test, expect, beforeEach, afterEach } from 'bun:test';
+import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
 import { Terminal } from './terminal';
 
 // Mock DOM environment for basic tests

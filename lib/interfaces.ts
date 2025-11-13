@@ -46,9 +46,7 @@ export interface IDisposable {
   dispose(): void;
 }
 
-export interface IEvent<T> {
-  (listener: (arg: T) => void): IDisposable;
-}
+export type IEvent<T> = (listener: (arg: T) => void) => IDisposable;
 
 export interface ITerminalAddon {
   activate(terminal: ITerminalCore): void;

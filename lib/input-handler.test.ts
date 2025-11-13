@@ -2,9 +2,9 @@
  * Unit tests for InputHandler
  */
 
-import { describe, test, expect, beforeAll, beforeEach, mock } from 'bun:test';
-import { InputHandler } from './input-handler';
+import { beforeAll, beforeEach, describe, expect, mock, test } from 'bun:test';
 import { Ghostty } from './ghostty';
+import { InputHandler } from './input-handler';
 import { Key, KeyAction, Mods } from './types';
 
 // Mock DOM types for testing

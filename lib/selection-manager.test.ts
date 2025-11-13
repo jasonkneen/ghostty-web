@@ -1,4 +1,4 @@
-import { describe, test, expect } from 'bun:test';
+import { describe, expect, test } from 'bun:test';
 import { SelectionManager } from './selection-manager';
 import { Terminal } from './terminal';
 

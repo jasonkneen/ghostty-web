@@ -14,7 +14,7 @@
  */
 
 import type { Ghostty } from './ghostty';
-import { KeyEncoder } from './ghostty';
+import type { KeyEncoder } from './ghostty';
 import { Key, KeyAction, Mods } from './types';
 
 /**

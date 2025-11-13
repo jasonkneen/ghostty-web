@@ -169,10 +169,10 @@ export class FitAddon implements ITerminalAddon {
     const elementStyle = window.getComputedStyle(terminalElement);
 
     // Get the actual content area (inside padding)
-    const paddingTop = parseInt(elementStyle.getPropertyValue('padding-top')) || 0;
-    const paddingBottom = parseInt(elementStyle.getPropertyValue('padding-bottom')) || 0;
-    const paddingLeft = parseInt(elementStyle.getPropertyValue('padding-left')) || 0;
-    const paddingRight = parseInt(elementStyle.getPropertyValue('padding-right')) || 0;
+    const paddingTop = Number.parseInt(elementStyle.getPropertyValue('padding-top')) || 0;
+    const paddingBottom = Number.parseInt(elementStyle.getPropertyValue('padding-bottom')) || 0;
+    const paddingLeft = Number.parseInt(elementStyle.getPropertyValue('padding-left')) || 0;
+    const paddingRight = Number.parseInt(elementStyle.getPropertyValue('padding-right')) || 0;
 
     // Use clientWidth/clientHeight which gives us the inside dimensions
     // This is stable and doesn't grow with content

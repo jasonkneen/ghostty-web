@@ -11,7 +11,7 @@
     "fmt": "prettier --check .",
     "fmt:fix": "prettier --write .",
     "lint": "biome check .",
-    "lint:fix": "biome check --apply ."
+    "lint:fix": "biome check --write ."
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
