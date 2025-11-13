@@ -30,16 +30,16 @@ export enum SgrAttributeTag {
   RESET_INVISIBLE = 15,
   STRIKETHROUGH = 16,
   RESET_STRIKETHROUGH = 17,
-  FG_8 = 18,           // 8-color (0-7)
-  FG_16 = 19,          // 16-color (0-15)
-  FG_256 = 20,         // 256-color palette
-  FG_RGB = 21,         // RGB color
-  FG_DEFAULT = 22,     // Reset to default
-  BG_8 = 23,           // Background 8-color
-  BG_16 = 24,          // Background 16-color
-  BG_256 = 25,         // Background 256-color
-  BG_RGB = 26,         // Background RGB
-  BG_DEFAULT = 27,     // Reset background
+  FG_8 = 18, // 8-color (0-7)
+  FG_16 = 19, // 16-color (0-15)
+  FG_256 = 20, // 256-color palette
+  FG_RGB = 21, // RGB color
+  FG_DEFAULT = 22, // Reset to default
+  BG_8 = 23, // Background 8-color
+  BG_16 = 24, // Background 16-color
+  BG_256 = 25, // Background 256-color
+  BG_RGB = 26, // Background RGB
+  BG_DEFAULT = 27, // Reset background
   UNDERLINE_COLOR_8 = 28,
   UNDERLINE_COLOR_16 = 29,
   UNDERLINE_COLOR_256 = 30,
@@ -94,24 +94,24 @@ export type SgrAttribute =
  */
 export enum KittyKeyFlags {
   DISABLED = 0,
-  DISAMBIGUATE = 1 << 0,       // Disambiguate escape codes
-  REPORT_EVENTS = 1 << 1,      // Report press and release
-  REPORT_ALTERNATES = 1 << 2,  // Report alternate key codes
-  REPORT_ALL = 1 << 3,         // Report all events
-  REPORT_ASSOCIATED = 1 << 4,  // Report associated text
-  ALL = 0x1F,                  // All flags enabled
+  DISAMBIGUATE = 1 << 0, // Disambiguate escape codes
+  REPORT_EVENTS = 1 << 1, // Report press and release
+  REPORT_ALTERNATES = 1 << 2, // Report alternate key codes
+  REPORT_ALL = 1 << 3, // Report all events
+  REPORT_ASSOCIATED = 1 << 4, // Report associated text
+  ALL = 0x1f, // All flags enabled
 }
 
 /**
  * Key encoder options
  */
 export enum KeyEncoderOption {
-  CURSOR_KEY_APPLICATION = 0,           // DEC mode 1
-  KEYPAD_KEY_APPLICATION = 1,           // DEC mode 66
-  IGNORE_KEYPAD_WITH_NUMLOCK = 2,       // DEC mode 1035
-  ALT_ESC_PREFIX = 3,                   // DEC mode 1036
-  MODIFY_OTHER_KEYS_STATE_2 = 4,        // xterm modifyOtherKeys
-  KITTY_KEYBOARD_FLAGS = 5,             // Kitty protocol flags
+  CURSOR_KEY_APPLICATION = 0, // DEC mode 1
+  KEYPAD_KEY_APPLICATION = 1, // DEC mode 66
+  IGNORE_KEYPAD_WITH_NUMLOCK = 2, // DEC mode 1035
+  ALT_ESC_PREFIX = 3, // DEC mode 1036
+  MODIFY_OTHER_KEYS_STATE_2 = 4, // xterm modifyOtherKeys
+  KITTY_KEYBOARD_FLAGS = 5, // Kitty protocol flags
 }
 
 /**
@@ -176,17 +176,17 @@ export enum Key {
   SPACE = 44,
 
   // Punctuation (0x2D-0x38)
-  MINUS = 45,              // - and _
-  EQUAL = 46,              // = and +
-  BRACKET_LEFT = 47,       // [ and {
-  BRACKET_RIGHT = 48,      // ] and }
-  BACKSLASH = 49,          // \ and |
-  SEMICOLON = 51,          // ; and :
-  QUOTE = 52,              // ' and "
-  GRAVE = 53,              // ` and ~
-  COMMA = 54,              // , and <
-  PERIOD = 55,             // . and >
-  SLASH = 56,              // / and ?
+  MINUS = 45, // - and _
+  EQUAL = 46, // = and +
+  BRACKET_LEFT = 47, // [ and {
+  BRACKET_RIGHT = 48, // ] and }
+  BACKSLASH = 49, // \ and |
+  SEMICOLON = 51, // ; and :
+  QUOTE = 52, // ' and "
+  GRAVE = 53, // ` and ~
+  COMMA = 54, // , and <
+  PERIOD = 55, // . and >
+  SLASH = 56, // / and ?
 
   // Function keys (0x3A-0x45)
   CAPS_LOCK = 57,
@@ -222,11 +222,11 @@ export enum Key {
 
   // Keypad (0x53-0x63)
   NUM_LOCK = 83,
-  KP_DIVIDE = 84,          // Keypad /
-  KP_MULTIPLY = 85,        // Keypad *
-  KP_MINUS = 86,           // Keypad -
-  KP_PLUS = 87,            // Keypad +
-  KP_ENTER = 88,           // Keypad Enter
+  KP_DIVIDE = 84, // Keypad /
+  KP_MULTIPLY = 85, // Keypad *
+  KP_MINUS = 86, // Keypad -
+  KP_PLUS = 87, // Keypad +
+  KP_ENTER = 88, // Keypad Enter
   KP_1 = 89,
   KP_2 = 90,
   KP_3 = 91,
@@ -237,12 +237,12 @@ export enum Key {
   KP_8 = 96,
   KP_9 = 97,
   KP_0 = 98,
-  KP_PERIOD = 99,          // Keypad .
+  KP_PERIOD = 99, // Keypad .
 
   // International keys (0x64-0x65)
-  NON_US_BACKSLASH = 100,  // \ and | on non-US keyboards
-  APPLICATION = 101,        // Context menu key
-  
+  NON_US_BACKSLASH = 100, // \ and | on non-US keyboards
+  APPLICATION = 101, // Context menu key
+
   // Additional function keys (0x68-0x73) - optional but included for completeness
   F13 = 104,
   F14 = 105,
@@ -266,7 +266,7 @@ export enum Mods {
   SHIFT = 1 << 0,
   CTRL = 1 << 1,
   ALT = 1 << 2,
-  SUPER = 1 << 3,   // Windows/Command key
+  SUPER = 1 << 3, // Windows/Command key
   CAPSLOCK = 1 << 4,
   NUMLOCK = 1 << 5,
 }
@@ -325,11 +325,7 @@ export interface GhosttyWasmExports extends WebAssembly.Exports {
   // Key encoder
   ghostty_key_encoder_new(allocator: number, encoderPtrPtr: number): number;
   ghostty_key_encoder_free(encoder: number): void;
-  ghostty_key_encoder_setopt(
-    encoder: number,
-    option: number,
-    valuePtr: number
-  ): number;
+  ghostty_key_encoder_setopt(encoder: number, option: number, valuePtr: number): number;
   ghostty_key_encoder_encode(
     encoder: number,
     eventPtr: number,
@@ -348,22 +344,10 @@ export interface GhosttyWasmExports extends WebAssembly.Exports {
 
   // Terminal
   ghostty_terminal_new(cols: number, rows: number): TerminalHandle;
-  ghostty_terminal_new_with_config(
-    cols: number,
-    rows: number,
-    configPtr: number
-  ): TerminalHandle;
+  ghostty_terminal_new_with_config(cols: number, rows: number, configPtr: number): TerminalHandle;
   ghostty_terminal_free(terminal: TerminalHandle): void;
-  ghostty_terminal_write(
-    terminal: TerminalHandle,
-    dataPtr: number,
-    dataLen: number
-  ): void;
-  ghostty_terminal_resize(
-    terminal: TerminalHandle,
-    cols: number,
-    rows: number
-  ): void;
+  ghostty_terminal_write(terminal: TerminalHandle, dataPtr: number, dataLen: number): void;
+  ghostty_terminal_resize(terminal: TerminalHandle, cols: number, rows: number): void;
   ghostty_terminal_get_cols(terminal: TerminalHandle): number;
   ghostty_terminal_get_rows(terminal: TerminalHandle): number;
   ghostty_terminal_get_cursor_x(terminal: TerminalHandle): number;
@@ -387,7 +371,6 @@ export interface GhosttyWasmExports extends WebAssembly.Exports {
   ghostty_terminal_get_scrollback_length(terminal: TerminalHandle): number;
 }
 
-
 // ============================================================================
 // Terminal Types
 // ============================================================================
@@ -401,15 +384,15 @@ export type TerminalHandle = number;
  * Cell structure matching ghostty_cell_t in C (12 bytes)
  */
 export interface GhosttyCell {
-  codepoint: number;      // u32 (Unicode codepoint)
-  fg_r: number;          // u8 (foreground red)
-  fg_g: number;          // u8 (foreground green)
-  fg_b: number;          // u8 (foreground blue)
-  bg_r: number;          // u8 (background red)
-  bg_g: number;          // u8 (background green)
-  bg_b: number;          // u8 (background blue)
-  flags: number;         // u8 (style flags bitfield)
-  width: number;         // u8 (character width: 1=normal, 2=wide, etc.)
+  codepoint: number; // u32 (Unicode codepoint)
+  fg_r: number; // u8 (foreground red)
+  fg_g: number; // u8 (foreground green)
+  fg_b: number; // u8 (foreground blue)
+  bg_r: number; // u8 (background red)
+  bg_g: number; // u8 (background green)
+  bg_b: number; // u8 (background blue)
+  flags: number; // u8 (style flags bitfield)
+  width: number; // u8 (character width: 1=normal, 2=wide, etc.)
 }
 
 /**
@@ -448,7 +431,7 @@ export interface Cursor {
  * Terminal configuration (passed to ghostty_terminal_new_with_config)
  */
 export interface TerminalConfig {
-  scrollback_limit: number;  // Number of scrollback lines (default: 10,000)
-  fg_color: RGB;             // Default foreground color
-  bg_color: RGB;             // Default background color
+  scrollback_limit: number; // Number of scrollback lines (default: 10,000)
+  fg_color: RGB; // Default foreground color
+  bg_color: RGB; // Default background color
 }

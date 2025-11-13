@@ -1,8 +1,8 @@
 /**
  * Terminal - Main terminal emulator class
- * 
+ *
  * Provides an xterm.js-compatible API wrapping Ghostty's WASM terminal emulator.
- * 
+ *
  * Usage:
  * ```typescript
  * const term = new Terminal({ cols: 80, rows: 24 });
@@ -17,12 +17,12 @@ import { CanvasRenderer } from './renderer';
 import { InputHandler } from './input-handler';
 import { SelectionManager } from './selection-manager';
 import { EventEmitter } from './event-emitter';
-import type { 
-  ITerminalOptions, 
-  ITerminalCore, 
-  ITerminalAddon, 
+import type {
+  ITerminalOptions,
+  ITerminalCore,
+  ITerminalAddon,
   IEvent,
-  IDisposable 
+  IDisposable,
 } from './interfaces';
 
 // ============================================================================
@@ -110,10 +110,7 @@ export class Terminal implements ITerminalCore {
       this.ghostty = await Ghostty.load(this.options.wasmPath);
 
       // Create WASM terminal
-      this.wasmTerm = this.ghostty.createTerminal(
-        this.options.cols,
-        this.options.rows
-      );
+      this.wasmTerm = this.ghostty.createTerminal(this.options.cols, this.options.rows);
 
       // Create canvas element
       this.canvas = document.createElement('canvas');
@@ -147,15 +144,11 @@ export class Terminal implements ITerminalCore {
       );
 
       // Create selection manager
-      this.selectionManager = new SelectionManager(
-        this,
-        this.renderer,
-        this.wasmTerm
-      );
-      
+      this.selectionManager = new SelectionManager(this, this.renderer, this.wasmTerm);
+
       // Connect selection manager to renderer
       this.renderer.setSelectionManager(this.selectionManager);
-      
+
       // Forward selection change events
       this.selectionManager.onSelectionChange(() => {
         this.selectionChangeEmitter.fire();
@@ -172,7 +165,6 @@ export class Terminal implements ITerminalCore {
 
       // Focus input (auto-focus so user can start typing immediately)
       this.focus();
-
     } catch (error) {
       // Clean up on error
       this.cleanupComponents();
@@ -258,7 +250,6 @@ export class Terminal implements ITerminalCore {
       this.wasmTerm.free();
     }
     this.wasmTerm = this.ghostty!.createTerminal(this.cols, this.rows);
-
 
     // Clear renderer
     this.renderer!.clear();

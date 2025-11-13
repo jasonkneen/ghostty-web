@@ -1,6 +1,6 @@
 /**
  * Terminal Integration Tests
- * 
+ *
  * Tests the main Terminal class that integrates all components.
  * Note: These are logic-focused tests. Visual/rendering tests are skipped
  * since they require a full browser environment with canvas.
@@ -78,7 +78,7 @@ describe('Terminal', () => {
       const term = new Terminal();
       await term.open(container);
       term.dispose();
-      
+
       expect(() => term.write('test')).toThrow('Terminal has been disposed');
     });
 
@@ -87,9 +87,9 @@ describe('Terminal', () => {
 
       const term = new Terminal();
       await term.open(container);
-      
+
       await expect(term.open(container)).rejects.toThrow('already open');
-      
+
       term.dispose();
     });
 
@@ -98,7 +98,7 @@ describe('Terminal', () => {
 
       const term = new Terminal();
       term.dispose();
-      
+
       await expect(term.open(container)).rejects.toThrow('has been disposed');
     });
   });
@@ -115,10 +115,10 @@ describe('Terminal', () => {
 
       const term = new Terminal();
       expect(term.element).toBeUndefined();
-      
+
       await term.open(container);
       expect(term.element).toBe(container);
-      
+
       term.dispose();
     });
   });
@@ -180,9 +180,9 @@ describe('Terminal', () => {
       });
 
       term.write('\x07'); // Bell character
-      
+
       // Give it a moment to process
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       expect(bellFired).toBe(true);
 
@@ -196,9 +196,9 @@ describe('Terminal', () => {
 
       const term = new Terminal();
       await term.open(container);
-      
+
       expect(() => term.write('Hello, World!')).not.toThrow();
-      
+
       term.dispose();
     });
 
@@ -207,9 +207,9 @@ describe('Terminal', () => {
 
       const term = new Terminal();
       await term.open(container);
-      
+
       expect(() => term.write('test string')).not.toThrow();
-      
+
       term.dispose();
     });
 
@@ -218,10 +218,10 @@ describe('Terminal', () => {
 
       const term = new Terminal();
       await term.open(container);
-      
+
       const data = new TextEncoder().encode('test');
       expect(() => term.write(data)).not.toThrow();
-      
+
       term.dispose();
     });
 
@@ -230,9 +230,9 @@ describe('Terminal', () => {
 
       const term = new Terminal();
       await term.open(container);
-      
+
       expect(() => term.writeln('test line')).not.toThrow();
-      
+
       term.dispose();
     });
   });
@@ -280,9 +280,9 @@ describe('Terminal', () => {
 
       const term = new Terminal();
       await term.open(container);
-      
+
       expect(() => term.clear()).not.toThrow();
-      
+
       term.dispose();
     });
 
@@ -291,9 +291,9 @@ describe('Terminal', () => {
 
       const term = new Terminal();
       await term.open(container);
-      
+
       expect(() => term.reset()).not.toThrow();
-      
+
       term.dispose();
     });
 
@@ -302,9 +302,9 @@ describe('Terminal', () => {
 
       const term = new Terminal();
       await term.open(container);
-      
+
       expect(() => term.focus()).not.toThrow();
-      
+
       term.dispose();
     });
 
@@ -327,7 +327,7 @@ describe('Terminal', () => {
         },
         dispose: () => {
           // Cleanup
-        }
+        },
       };
 
       expect(() => term.loadAddon(mockAddon)).not.toThrow();
@@ -346,7 +346,7 @@ describe('Terminal', () => {
         activate: (terminal: any) => {
           activateCalled = true;
         },
-        dispose: () => {}
+        dispose: () => {},
       };
 
       term.loadAddon(mockAddon);
@@ -367,7 +367,7 @@ describe('Terminal', () => {
         activate: (terminal: any) => {},
         dispose: () => {
           disposeCalled = true;
-        }
+        },
       };
 
       term.loadAddon(mockAddon);
@@ -383,12 +383,12 @@ describe('Terminal', () => {
 
       const term = new Terminal();
       await term.open(container);
-      
+
       // Should not throw on ANSI escape sequences
       expect(() => term.write('\x1b[1;31mRed bold text\x1b[0m')).not.toThrow();
       expect(() => term.write('\x1b[32mGreen\x1b[0m')).not.toThrow();
       expect(() => term.write('\x1b[2J\x1b[H')).not.toThrow(); // Clear and home
-      
+
       term.dispose();
     });
 
@@ -397,11 +397,11 @@ describe('Terminal', () => {
 
       const term = new Terminal();
       await term.open(container);
-      
+
       expect(() => term.write('\x1b[5;10H')).not.toThrow(); // Move cursor
       expect(() => term.write('\x1b[2A')).not.toThrow(); // Move up 2
       expect(() => term.write('\x1b[3B')).not.toThrow(); // Move down 3
-      
+
       term.dispose();
     });
 
@@ -410,13 +410,13 @@ describe('Terminal', () => {
 
       const term = new Terminal();
       await term.open(container);
-      
+
       expect(() => {
         term.write('Line 1\r\n');
         term.write('Line 2\r\n');
         term.write('Line 3\r\n');
       }).not.toThrow();
-      
+
       term.dispose();
     });
   });
@@ -427,7 +427,7 @@ describe('Terminal', () => {
 
       const term = new Terminal();
       await term.open(container);
-      
+
       term.dispose();
       expect(() => term.dispose()).not.toThrow();
     });
@@ -437,12 +437,12 @@ describe('Terminal', () => {
 
       const term = new Terminal();
       await term.open(container);
-      
+
       const initialChildCount = container.children.length;
       expect(initialChildCount).toBeGreaterThan(0);
-      
+
       term.dispose();
-      
+
       const finalChildCount = container.children.length;
       expect(finalChildCount).toBe(0);
     });

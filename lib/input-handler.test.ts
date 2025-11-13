@@ -55,32 +55,35 @@ function createKeyEvent(
 }
 
 // Helper to create mock clipboard event
-function createClipboardEvent(
-  text: string | null
-): MockClipboardEvent {
+function createClipboardEvent(text: string | null): MockClipboardEvent {
   const data = new Map<string, string>();
   if (text !== null) {
     data.set('text/plain', text);
   }
-  
+
   return {
     type: 'paste',
-    clipboardData: text !== null ? {
-      getData: (format: string) => data.get(format) || '',
-      setData: (format: string, value: string) => { data.set(format, value); },
-    } : null,
+    clipboardData:
+      text !== null
+        ? {
+            getData: (format: string) => data.get(format) || '',
+            setData: (format: string, value: string) => {
+              data.set(format, value);
+            },
+          }
+        : null,
     preventDefault: mock(() => {}),
     stopPropagation: mock(() => {}),
   };
 }
 
 // Helper to create mock container
-function createMockContainer(): MockHTMLElement & { 
+function createMockContainer(): MockHTMLElement & {
   _listeners: Map<string, ((e: any) => void)[]>;
   dispatchEvent: (event: any) => void;
 } {
   const listeners = new Map<string, ((e: any) => void)[]>();
-  
+
   return {
     _listeners: listeners,
     addEventListener(event: string, handler: (e: any) => void) {
@@ -133,7 +136,7 @@ describe('InputHandler', () => {
   beforeEach(() => {
     // Create mock container for each test
     container = createMockContainer();
-    
+
     // Reset data tracking
     dataReceived = [];
     bellCalled = false;
@@ -145,7 +148,9 @@ describe('InputHandler', () => {
         ghostty,
         container as any,
         (data) => dataReceived.push(data),
-        () => { bellCalled = true; }
+        () => {
+          bellCalled = true;
+        }
       );
 
       expect(handler.isActive()).toBe(true);
@@ -158,7 +163,9 @@ describe('InputHandler', () => {
         ghostty,
         container as any,
         (data) => dataReceived.push(data),
-        () => { bellCalled = true; }
+        () => {
+          bellCalled = true;
+        }
       );
 
       handler.dispose();
@@ -172,7 +179,9 @@ describe('InputHandler', () => {
         ghostty,
         container as any,
         (data) => dataReceived.push(data),
-        () => { bellCalled = true; }
+        () => {
+          bellCalled = true;
+        }
       );
 
       handler.dispose();
@@ -188,7 +197,9 @@ describe('InputHandler', () => {
         ghostty,
         container as any,
         (data) => dataReceived.push(data),
-        () => { bellCalled = true; }
+        () => {
+          bellCalled = true;
+        }
       );
 
       simulateKey(container, createKeyEvent('KeyA', 'a'));
@@ -203,7 +214,9 @@ describe('InputHandler', () => {
         ghostty,
         container as any,
         (data) => dataReceived.push(data),
-        () => { bellCalled = true; }
+        () => {
+          bellCalled = true;
+        }
       );
 
       simulateKey(container, createKeyEvent('KeyA', 'A', { shift: true }));
@@ -215,13 +228,15 @@ describe('InputHandler', () => {
         ghostty,
         container as any,
         (data) => dataReceived.push(data),
-        () => { bellCalled = true; }
+        () => {
+          bellCalled = true;
+        }
       );
 
       simulateKey(container, createKeyEvent('Digit0', '0'));
       simulateKey(container, createKeyEvent('Digit5', '5'));
       simulateKey(container, createKeyEvent('Digit9', '9'));
-      
+
       expect(dataReceived).toEqual(['0', '5', '9']);
     });
 
@@ -230,13 +245,15 @@ describe('InputHandler', () => {
         ghostty,
         container as any,
         (data) => dataReceived.push(data),
-        () => { bellCalled = true; }
+        () => {
+          bellCalled = true;
+        }
       );
 
       simulateKey(container, createKeyEvent('Comma', ','));
       simulateKey(container, createKeyEvent('Period', '.'));
       simulateKey(container, createKeyEvent('Slash', '/'));
-      
+
       expect(dataReceived).toEqual([',', '.', '/']);
     });
 
@@ -245,7 +262,9 @@ describe('InputHandler', () => {
         ghostty,
         container as any,
         (data) => dataReceived.push(data),
-        () => { bellCalled = true; }
+        () => {
+          bellCalled = true;
+        }
       );
 
       simulateKey(container, createKeyEvent('Space', ' '));
@@ -259,11 +278,13 @@ describe('InputHandler', () => {
         ghostty,
         container as any,
         (data) => dataReceived.push(data),
-        () => { bellCalled = true; }
+        () => {
+          bellCalled = true;
+        }
       );
 
       simulateKey(container, createKeyEvent('KeyA', 'a', { ctrl: true }));
-      
+
       expect(dataReceived.length).toBe(1);
       // Ctrl+A should produce 0x01
       expect(dataReceived[0].charCodeAt(0)).toBe(0x01);
@@ -274,11 +295,13 @@ describe('InputHandler', () => {
         ghostty,
         container as any,
         (data) => dataReceived.push(data),
-        () => { bellCalled = true; }
+        () => {
+          bellCalled = true;
+        }
       );
 
       simulateKey(container, createKeyEvent('KeyC', 'c', { ctrl: true }));
-      
+
       expect(dataReceived.length).toBe(1);
       // Ctrl+C should produce 0x03
       expect(dataReceived[0].charCodeAt(0)).toBe(0x03);
@@ -289,11 +312,13 @@ describe('InputHandler', () => {
         ghostty,
         container as any,
         (data) => dataReceived.push(data),
-        () => { bellCalled = true; }
+        () => {
+          bellCalled = true;
+        }
       );
 
       simulateKey(container, createKeyEvent('KeyD', 'd', { ctrl: true }));
-      
+
       expect(dataReceived.length).toBe(1);
       // Ctrl+D should produce 0x04
       expect(dataReceived[0].charCodeAt(0)).toBe(0x04);
@@ -304,14 +329,16 @@ describe('InputHandler', () => {
         ghostty,
         container as any,
         (data) => dataReceived.push(data),
-        () => { bellCalled = true; }
+        () => {
+          bellCalled = true;
+        }
       );
 
       simulateKey(container, createKeyEvent('KeyZ', 'z', { ctrl: true }));
-      
+
       expect(dataReceived.length).toBe(1);
       // Ctrl+Z should produce 0x1A (26)
-      expect(dataReceived[0].charCodeAt(0)).toBe(0x1A);
+      expect(dataReceived[0].charCodeAt(0)).toBe(0x1a);
     });
 
     test('Cmd+C allows copy (no data sent)', () => {
@@ -319,11 +346,13 @@ describe('InputHandler', () => {
         ghostty,
         container as any,
         (data) => dataReceived.push(data),
-        () => { bellCalled = true; }
+        () => {
+          bellCalled = true;
+        }
       );
 
       simulateKey(container, createKeyEvent('KeyC', 'c', { meta: true }));
-      
+
       // Cmd+C should NOT send data - it should allow copy operation
       // SelectionManager handles the actual copying
       expect(dataReceived.length).toBe(0);
@@ -336,11 +365,13 @@ describe('InputHandler', () => {
         ghostty,
         container as any,
         (data) => dataReceived.push(data),
-        () => { bellCalled = true; }
+        () => {
+          bellCalled = true;
+        }
       );
 
       simulateKey(container, createKeyEvent('Enter', 'Enter'));
-      
+
       expect(dataReceived.length).toBe(1);
       // Enter should produce \r (0x0D)
       expect(dataReceived[0]).toBe('\r');
@@ -351,11 +382,13 @@ describe('InputHandler', () => {
         ghostty,
         container as any,
         (data) => dataReceived.push(data),
-        () => { bellCalled = true; }
+        () => {
+          bellCalled = true;
+        }
       );
 
       simulateKey(container, createKeyEvent('Tab', 'Tab'));
-      
+
       expect(dataReceived.length).toBe(1);
       // Tab should produce \t (0x09)
       expect(dataReceived[0]).toBe('\t');
@@ -366,14 +399,16 @@ describe('InputHandler', () => {
         ghostty,
         container as any,
         (data) => dataReceived.push(data),
-        () => { bellCalled = true; }
+        () => {
+          bellCalled = true;
+        }
       );
 
       simulateKey(container, createKeyEvent('Escape', 'Escape'));
-      
+
       expect(dataReceived.length).toBe(1);
       // Escape should produce ESC (0x1B)
-      expect(dataReceived[0].charCodeAt(0)).toBe(0x1B);
+      expect(dataReceived[0].charCodeAt(0)).toBe(0x1b);
     });
 
     test('encodes Backspace', () => {
@@ -381,15 +416,17 @@ describe('InputHandler', () => {
         ghostty,
         container as any,
         (data) => dataReceived.push(data),
-        () => { bellCalled = true; }
+        () => {
+          bellCalled = true;
+        }
       );
 
       simulateKey(container, createKeyEvent('Backspace', 'Backspace'));
-      
+
       expect(dataReceived.length).toBe(1);
       // Backspace should produce 0x7F (DEL) or 0x08 (BS)
       const code = dataReceived[0].charCodeAt(0);
-      expect(code === 0x7F || code === 0x08).toBe(true);
+      expect(code === 0x7f || code === 0x08).toBe(true);
     });
   });
 
@@ -399,11 +436,13 @@ describe('InputHandler', () => {
         ghostty,
         container as any,
         (data) => dataReceived.push(data),
-        () => { bellCalled = true; }
+        () => {
+          bellCalled = true;
+        }
       );
 
       simulateKey(container, createKeyEvent('ArrowUp', 'ArrowUp'));
-      
+
       expect(dataReceived.length).toBe(1);
       // Arrow keys produce ESC[A, ESC[B, ESC[C, ESC[D or ESCOA, ESCOB, ESCOC, ESCOD
       expect(dataReceived[0]).toMatch(/\x1b(\[A|OA)/);
@@ -414,11 +453,13 @@ describe('InputHandler', () => {
         ghostty,
         container as any,
         (data) => dataReceived.push(data),
-        () => { bellCalled = true; }
+        () => {
+          bellCalled = true;
+        }
       );
 
       simulateKey(container, createKeyEvent('ArrowDown', 'ArrowDown'));
-      
+
       expect(dataReceived.length).toBe(1);
       expect(dataReceived[0]).toMatch(/\x1b(\[B|OB)/);
     });
@@ -428,11 +469,13 @@ describe('InputHandler', () => {
         ghostty,
         container as any,
         (data) => dataReceived.push(data),
-        () => { bellCalled = true; }
+        () => {
+          bellCalled = true;
+        }
       );
 
       simulateKey(container, createKeyEvent('ArrowLeft', 'ArrowLeft'));
-      
+
       expect(dataReceived.length).toBe(1);
       expect(dataReceived[0]).toMatch(/\x1b(\[D|OD)/);
     });
@@ -442,11 +485,13 @@ describe('InputHandler', () => {
         ghostty,
         container as any,
         (data) => dataReceived.push(data),
-        () => { bellCalled = true; }
+        () => {
+          bellCalled = true;
+        }
       );
 
       simulateKey(container, createKeyEvent('ArrowRight', 'ArrowRight'));
-      
+
       expect(dataReceived.length).toBe(1);
       expect(dataReceived[0]).toMatch(/\x1b(\[C|OC)/);
     });
@@ -458,11 +503,13 @@ describe('InputHandler', () => {
         ghostty,
         container as any,
         (data) => dataReceived.push(data),
-        () => { bellCalled = true; }
+        () => {
+          bellCalled = true;
+        }
       );
 
       simulateKey(container, createKeyEvent('F1', 'F1'));
-      
+
       expect(dataReceived.length).toBe(1);
       // F1 produces ESC[11~ or ESCOP
       expect(dataReceived[0]).toMatch(/\x1b(\[11~|OP)/);
@@ -473,11 +520,13 @@ describe('InputHandler', () => {
         ghostty,
         container as any,
         (data) => dataReceived.push(data),
-        () => { bellCalled = true; }
+        () => {
+          bellCalled = true;
+        }
       );
 
       simulateKey(container, createKeyEvent('F12', 'F12'));
-      
+
       expect(dataReceived.length).toBe(1);
       // F12 produces ESC[24~
       expect(dataReceived[0].includes('\x1b')).toBe(true);
@@ -490,11 +539,13 @@ describe('InputHandler', () => {
         ghostty,
         container as any,
         (data) => dataReceived.push(data),
-        () => { bellCalled = true; }
+        () => {
+          bellCalled = true;
+        }
       );
 
       simulateKey(container, createKeyEvent('Home', 'Home'));
-      
+
       expect(dataReceived.length).toBe(1);
       expect(dataReceived[0].includes('\x1b')).toBe(true);
     });
@@ -504,11 +555,13 @@ describe('InputHandler', () => {
         ghostty,
         container as any,
         (data) => dataReceived.push(data),
-        () => { bellCalled = true; }
+        () => {
+          bellCalled = true;
+        }
       );
 
       simulateKey(container, createKeyEvent('End', 'End'));
-      
+
       expect(dataReceived.length).toBe(1);
       expect(dataReceived[0].includes('\x1b')).toBe(true);
     });
@@ -518,11 +571,13 @@ describe('InputHandler', () => {
         ghostty,
         container as any,
         (data) => dataReceived.push(data),
-        () => { bellCalled = true; }
+        () => {
+          bellCalled = true;
+        }
       );
 
       simulateKey(container, createKeyEvent('PageUp', 'PageUp'));
-      
+
       expect(dataReceived.length).toBe(1);
       expect(dataReceived[0].includes('\x1b')).toBe(true);
     });
@@ -532,11 +587,13 @@ describe('InputHandler', () => {
         ghostty,
         container as any,
         (data) => dataReceived.push(data),
-        () => { bellCalled = true; }
+        () => {
+          bellCalled = true;
+        }
       );
 
       simulateKey(container, createKeyEvent('PageDown', 'PageDown'));
-      
+
       expect(dataReceived.length).toBe(1);
       expect(dataReceived[0].includes('\x1b')).toBe(true);
     });
@@ -546,11 +603,13 @@ describe('InputHandler', () => {
         ghostty,
         container as any,
         (data) => dataReceived.push(data),
-        () => { bellCalled = true; }
+        () => {
+          bellCalled = true;
+        }
       );
 
       simulateKey(container, createKeyEvent('Delete', 'Delete'));
-      
+
       expect(dataReceived.length).toBe(1);
       expect(dataReceived[0].includes('\x1b')).toBe(true);
     });
@@ -560,11 +619,13 @@ describe('InputHandler', () => {
         ghostty,
         container as any,
         (data) => dataReceived.push(data),
-        () => { bellCalled = true; }
+        () => {
+          bellCalled = true;
+        }
       );
 
       simulateKey(container, createKeyEvent('Insert', 'Insert'));
-      
+
       expect(dataReceived.length).toBe(1);
       expect(dataReceived[0].includes('\x1b')).toBe(true);
     });
@@ -576,12 +637,14 @@ describe('InputHandler', () => {
         ghostty,
         container as any,
         (data) => dataReceived.push(data),
-        () => { bellCalled = true; }
+        () => {
+          bellCalled = true;
+        }
       );
 
       const event = createKeyEvent('KeyA', 'a');
       simulateKey(container, event);
-      
+
       expect(event.preventDefault).toHaveBeenCalled();
     });
 
@@ -590,12 +653,14 @@ describe('InputHandler', () => {
         ghostty,
         container as any,
         (data) => dataReceived.push(data),
-        () => { bellCalled = true; }
+        () => {
+          bellCalled = true;
+        }
       );
 
       const event = createKeyEvent('Enter', 'Enter');
       simulateKey(container, event);
-      
+
       expect(event.preventDefault).toHaveBeenCalled();
     });
 
@@ -604,12 +669,14 @@ describe('InputHandler', () => {
         ghostty,
         container as any,
         (data) => dataReceived.push(data),
-        () => { bellCalled = true; }
+        () => {
+          bellCalled = true;
+        }
       );
 
       const event = createKeyEvent('KeyC', 'c', { ctrl: true });
       simulateKey(container, event);
-      
+
       expect(event.preventDefault).toHaveBeenCalled();
     });
   });
@@ -620,12 +687,14 @@ describe('InputHandler', () => {
         ghostty,
         container as any,
         (data) => dataReceived.push(data),
-        () => { bellCalled = true; }
+        () => {
+          bellCalled = true;
+        }
       );
 
       // Simulate a key that's not in KEY_MAP
       simulateKey(container, createKeyEvent('Unknown', 'Unknown'));
-      
+
       // Should not crash or produce output
       expect(dataReceived.length).toBe(0);
     });
@@ -637,11 +706,13 @@ describe('InputHandler', () => {
         ghostty,
         container as any,
         (data) => dataReceived.push(data),
-        () => { bellCalled = true; }
+        () => {
+          bellCalled = true;
+        }
       );
 
       simulateKey(container, createKeyEvent('KeyA', 'A', { ctrl: true, shift: true }));
-      
+
       expect(dataReceived.length).toBe(1);
       // Should still encode something
       expect(dataReceived[0].length).toBeGreaterThan(0);
@@ -652,11 +723,13 @@ describe('InputHandler', () => {
         ghostty,
         container as any,
         (data) => dataReceived.push(data),
-        () => { bellCalled = true; }
+        () => {
+          bellCalled = true;
+        }
       );
 
       simulateKey(container, createKeyEvent('KeyA', 'a', { alt: true }));
-      
+
       expect(dataReceived.length).toBe(1);
       // Alt+A often produces ESC a or similar
       expect(dataReceived[0].length).toBeGreaterThan(0);
@@ -669,14 +742,16 @@ describe('InputHandler', () => {
         ghostty,
         container as any,
         (data) => dataReceived.push(data),
-        () => { bellCalled = true; }
+        () => {
+          bellCalled = true;
+        }
       );
 
       const pasteText = 'Hello, World!';
       const pasteEvent = createClipboardEvent(pasteText);
-      
+
       container.dispatchEvent(pasteEvent);
-      
+
       expect(dataReceived.length).toBe(1);
       expect(dataReceived[0]).toBe(pasteText);
     });
@@ -686,14 +761,16 @@ describe('InputHandler', () => {
         ghostty,
         container as any,
         (data) => dataReceived.push(data),
-        () => { bellCalled = true; }
+        () => {
+          bellCalled = true;
+        }
       );
 
       const pasteText = 'Line 1\nLine 2\nLine 3';
       const pasteEvent = createClipboardEvent(pasteText);
-      
+
       container.dispatchEvent(pasteEvent);
-      
+
       expect(dataReceived.length).toBe(1);
       expect(dataReceived[0]).toBe(pasteText);
     });
@@ -703,13 +780,15 @@ describe('InputHandler', () => {
         ghostty,
         container as any,
         (data) => dataReceived.push(data),
-        () => { bellCalled = true; }
+        () => {
+          bellCalled = true;
+        }
       );
 
       const pasteEvent = createClipboardEvent(null);
-      
+
       container.dispatchEvent(pasteEvent);
-      
+
       expect(dataReceived.length).toBe(0);
     });
 
@@ -718,13 +797,15 @@ describe('InputHandler', () => {
         ghostty,
         container as any,
         (data) => dataReceived.push(data),
-        () => { bellCalled = true; }
+        () => {
+          bellCalled = true;
+        }
       );
 
       const pasteEvent = createClipboardEvent('');
-      
+
       container.dispatchEvent(pasteEvent);
-      
+
       expect(dataReceived.length).toBe(0);
     });
 
@@ -733,12 +814,14 @@ describe('InputHandler', () => {
         ghostty,
         container as any,
         (data) => dataReceived.push(data),
-        () => { bellCalled = true; }
+        () => {
+          bellCalled = true;
+        }
       );
 
       // Ctrl+V should NOT call onData callback (lets paste event handle it)
       simulateKey(container, createKeyEvent('KeyV', 'v', { ctrl: true }));
-      
+
       expect(dataReceived.length).toBe(0);
     });
 
@@ -747,12 +830,14 @@ describe('InputHandler', () => {
         ghostty,
         container as any,
         (data) => dataReceived.push(data),
-        () => { bellCalled = true; }
+        () => {
+          bellCalled = true;
+        }
       );
 
       // Cmd+V should NOT call onData callback (lets paste event handle it)
       simulateKey(container, createKeyEvent('KeyV', 'v', { meta: true }));
-      
+
       expect(dataReceived.length).toBe(0);
     });
   });

@@ -7,12 +7,14 @@ This repository integrates **libghostty-vt** (Ghostty's VT100 parser) with WebAs
 ### What's Implemented
 
 **Task 1: TypeScript Wrapper (618 lines)** ✅
+
 - `lib/types.ts` - Type definitions for libghostty-vt C API
 - `lib/ghostty.ts` - `Ghostty`, `SgrParser`, `KeyEncoder` classes
 - Automatic memory management for WASM pointers
 - Demo: `examples/sgr-demo.html` - Interactive SGR parser demo
 
 **Task 2: Screen Buffer (1,704 lines)** ✅
+
 - `lib/buffer.ts` - ScreenBuffer class (840 lines)
   - 2D grid with cursor management
   - Wide character support (CJK, emoji, combining chars)
@@ -28,6 +30,7 @@ This repository integrates **libghostty-vt** (Ghostty's VT100 parser) with WebAs
 ### What's Missing (Your Job)
 
 **Terminal Implementation** - Rendering and state machine:
+
 1. ~~Screen buffer (2D array of cells)~~ ✅ **DONE (Task 2)**
 2. Canvas renderer (draw cells with colors)
 3. VT100 state machine (parse escape sequences, use Ghostty parsers)
@@ -117,30 +120,30 @@ buffer.saveCursor();
 buffer.restoreCursor();
 
 // Styling
-buffer.setStyle({ 
-  bold: true, 
-  fg: { type: 'palette', index: 1 } // Red
+buffer.setStyle({
+  bold: true,
+  fg: { type: 'palette', index: 1 }, // Red
 });
 buffer.writeString('Bold red text');
 buffer.resetStyle();
 
 // Scroll regions (for vim-like apps)
 buffer.setScrollRegion(5, 20); // Lines 5-20 scroll
-buffer.setOriginMode(true);    // Cursor relative to region
-buffer.moveCursorTo(0, 0);     // Goes to line 5 (region top)
+buffer.setOriginMode(true); // Cursor relative to region
+buffer.moveCursorTo(0, 0); // Goes to line 5 (region top)
 
 // Scrolling
-buffer.scrollUp(1);   // Scroll up 1 line
-buffer.index();       // Move down, scroll if at bottom
+buffer.scrollUp(1); // Scroll up 1 line
+buffer.index(); // Move down, scroll if at bottom
 buffer.reverseIndex(); // Move up, scroll if at top
 
 // Erasing
-buffer.eraseInLine(2);    // Clear entire line
+buffer.eraseInLine(2); // Clear entire line
 buffer.eraseInDisplay(2); // Clear entire screen
 
 // Line operations
-buffer.insertLines(2);  // Insert 2 blank lines
-buffer.deleteLines(1);  // Delete current line
+buffer.insertLines(2); // Insert 2 blank lines
+buffer.deleteLines(1); // Delete current line
 
 // Modes
 buffer.setAutoWrap(false); // Disable wrapping
@@ -158,10 +161,10 @@ if (buffer.isDirty(5)) {
 buffer.clearDirty();
 
 // xterm.js-compatible properties
-buffer.cursorX;   // Same as getCursor().x
-buffer.cursorY;   // Same as getCursor().y
-buffer.baseY;     // Scrollback length
-buffer.length;    // Total lines (scrollback + rows)
+buffer.cursorX; // Same as getCursor().x
+buffer.cursorY; // Same as getCursor().y
+buffer.baseY; // Scrollback length
+buffer.length; // Total lines (scrollback + rows)
 ```
 
 ### Ghostty SGR Parser API (Task 1)
@@ -210,33 +213,37 @@ export class Terminal {
   private cursor: { x: number; y: number };
   private ghostty: Ghostty;
   private sgrParser: SgrParser;
-  
+
   constructor(cols: number, rows: number) {
     // Initialize buffer
-    this.buffer = Array(rows).fill(null).map(() =>
-      Array(cols).fill(null).map(() => ({
-        char: ' ',
-        fg: 7,
-        bg: 0,
-        bold: false,
-        italic: false,
-        underline: false,
-      }))
-    );
+    this.buffer = Array(rows)
+      .fill(null)
+      .map(() =>
+        Array(cols)
+          .fill(null)
+          .map(() => ({
+            char: ' ',
+            fg: 7,
+            bg: 0,
+            bold: false,
+            italic: false,
+            underline: false,
+          }))
+      );
     this.cursor = { x: 0, y: 0 };
   }
-  
+
   async init() {
     this.ghostty = await Ghostty.load('./ghostty-vt.wasm');
     this.sgrParser = this.ghostty.createSgrParser();
   }
-  
+
   write(data: string) {
     // Parse escape sequences
     // Use sgrParser when you encounter ESC[...m
     // Write characters to buffer
   }
-  
+
   render(canvas: HTMLCanvasElement) {
     // Draw buffer to canvas
   }
@@ -257,14 +264,14 @@ write(data: string) {
           this.writeChar(char);
         }
         break;
-        
+
       case 'escape':
         if (char === '[') {
           this.state = 'csi';
           this.params = [];
         }
         break;
-        
+
       case 'csi':
         if (char >= '0' && char <= '9') {
           // Accumulate parameters
@@ -288,15 +295,15 @@ render(canvas: HTMLCanvasElement) {
   const ctx = canvas.getContext('2d');
   const charWidth = 9;
   const charHeight = 16;
-  
+
   for (let y = 0; y < this.rows; y++) {
     for (let x = 0; x < this.cols; x++) {
       const cell = this.buffer[y][x];
-      
+
       // Draw background
       ctx.fillStyle = this.getColor(cell.bg);
       ctx.fillRect(x * charWidth, y * charHeight, charWidth, charHeight);
-      
+
       // Draw character
       ctx.fillStyle = this.getColor(cell.fg);
       if (cell.bold) ctx.font = 'bold 14px monospace';
@@ -366,15 +373,18 @@ console.log(bytes); // Uint8Array([1])
 ## Key Decisions
 
 **Why TypeScript + WASM?**
+
 - TypeScript: UI, screen buffer, rendering (easy)
 - WASM: VT100 parsing (hard, use Ghostty's proven implementation)
 
 **Why Not Full Ghostty Terminal?**
+
 - Ghostty's Terminal/Screen classes aren't exported to WASM
 - Only parsers (SGR, key encoder, OSC) are exported
 - This is intentional - the full terminal is complex and Zig-specific
 
 **What to Build in TypeScript vs WASM?**
+
 - TypeScript: Screen buffer, rendering, events, application logic
 - WASM: Parsing (SGR colors, key encoding, OSC sequences)
 
@@ -395,6 +405,7 @@ console.log(bytes); // Uint8Array([1])
 ### Running Tests
 
 **Run automated tests:**
+
 ```bash
 bun test                    # Run all tests
 bun test lib/buffer.test.ts # Run specific test file
@@ -402,6 +413,7 @@ bun test --watch            # Watch mode
 ```
 
 **TypeScript type checking:**
+
 ```bash
 bun run typecheck          # Check types without compiling
 ```
@@ -419,6 +431,7 @@ python3 -m http.server 8000
 ```
 
 Then open:
+
 - Buffer Demo: `http://localhost:8000/examples/buffer-demo.html`
 - SGR Demo: `http://localhost:8000/examples/sgr-demo.html`
 
@@ -433,6 +446,7 @@ When testing `buffer-demo.html`:
    - ❌ Red "Error!" = Check console
 
 2. **Open browser console (F12)** to see:
+
    ```
    ✅ ScreenBuffer loaded successfully
    ✅ Buffer instance created
@@ -440,6 +454,7 @@ When testing `buffer-demo.html`:
    ```
 
 3. **Click test scenario buttons** and watch console:
+
    ```
    🧪 Running Test 1: Basic Writing
    ✅ Test 1 complete
@@ -453,14 +468,15 @@ When testing `buffer-demo.html`:
 5. **Manual testing in console:**
    ```javascript
    // Test buffer API directly
-   buffer.writeString('Hello!')
-   buffer.getCursor()           // {x: 6, y: 0, ...}
-   buffer.writeChar('中')       // Wide char
-   buffer.getCursor()           // x increased by 2!
-   renderBuffer()              // Update display
+   buffer.writeString('Hello!');
+   buffer.getCursor(); // {x: 6, y: 0, ...}
+   buffer.writeChar('中'); // Wide char
+   buffer.getCursor(); // x increased by 2!
+   renderBuffer(); // Update display
    ```
 
 **Critical tests:**
+
 - **Test 3 (Wide Chars)**: Chinese 中文 should be visibly WIDER than ABC
 - **Test 4 (Scroll Region)**: Headers/footers stay fixed while middle scrolls
 
@@ -469,16 +485,19 @@ When testing `buffer-demo.html`:
 ### Build/WASM Issues
 
 **WASM not loading?**
+
 - Check file exists: `ls -lh ghostty-vt.wasm`
 - Check browser console for fetch errors
 - Make sure serving via HTTP (not file://)
 
 **Build errors?**
+
 - Verify Zig version: `zig version` (must be 0.15.2+)
 - Update Ghostty: `cd /tmp/ghostty && git pull`
 - Clean build: `rm -rf zig-out && zig build lib-vt ...`
 
 **Parser not working?**
+
 - Check WASM exports: `wasm-objdump -x ghostty-vt.wasm | grep export`
 - Check browser console for errors
 - Test with demo: `http://localhost:8000/examples/sgr-demo.html`
@@ -486,22 +505,26 @@ When testing `buffer-demo.html`:
 ### Demo Issues
 
 **"Nothing is rendering in the terminal"**
+
 - ❌ Using basic HTTP server → **Use `bun run dev` instead!**
 - Refresh browser (Ctrl+Shift+R)
 - Check console for import errors
 - Verify status banner is green
 
 **"Buttons don't work"**
+
 - Check console (F12) for JavaScript errors
 - Try manual test: `testBasicWriting()` in console
 - Verify functions exist: `window.testBasicWriting` should be `function`
 
 **"Wide characters look wrong"**
+
 - This is expected with basic HTML rendering
 - Verify in console: cursor advances by 2 for wide chars
 - Proper rendering comes in Task 4 (Canvas Renderer)
 
 **Module import errors**
+
 - Must use Vite dev server: `bun run dev`
 - Don't use: `python3 -m http.server` or `./run-demo.sh` without Vite
 - Check `package.json` scripts are correct
@@ -509,6 +532,7 @@ When testing `buffer-demo.html`:
 ### Test Failures
 
 **If tests fail:**
+
 ```bash
 # Run specific test file with verbose output
 bun test lib/buffer.test.ts
@@ -521,6 +545,7 @@ bun test -t "test name pattern"
 ```
 
 **Common test issues:**
+
 - Import errors → Check file paths
 - Type errors → Run `bun run typecheck`
 - Assertion failures → Check implementation logic
@@ -530,23 +555,28 @@ bun test -t "test name pattern"
 **Best practices for agents:**
 
 0. **ALWAYS pull from main before starting work:**
+
    ```bash
    git fetch origin
    git merge origin/main --no-edit
    ```
+
    This ensures you're working with the latest code and all features are available.
 
 1. **Always run tests after changes:**
+
    ```bash
    bun test lib/buffer.test.ts
    ```
 
 2. **Type check before committing:**
+
    ```bash
    bun run typecheck
    ```
 
 3. **Test in browser:**
+
    ```bash
    bun run dev
    # Open http://localhost:8000/examples/buffer-demo.html

@@ -1,577 +1,618 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ghostty Terminal - File Browser</title>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-      min-height: 100vh;
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
-      width: 100%;
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-    }
-
-    header {
-      text-align: center;
-      color: white;
-      margin-bottom: 20px;
-    }
-
-    h1 {
-      font-size: 2.5rem;
-      margin-bottom: 10px;
-      text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-    }
-
-    .subtitle {
-      opacity: 0.9;
-      font-size: 1.1rem;
-    }
-
-    .status-bar {
-      background: rgba(255, 255, 255, 0.1);
-      backdrop-filter: blur(10px);
-      padding: 15px 20px;
-      border-radius: 10px 10px 0 0;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      color: white;
-    }
-
-    .status-indicator {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .status-dot {
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      background: #ff4444;
-      animation: pulse 2s infinite;
-    }
-
-    .status-dot.connected {
-      background: #44ff44;
-    }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
-    }
-
-    .terminal-wrapper {
-      background: white;
-      border-radius: 0 0 10px 10px;
-      box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-      overflow: hidden;
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      min-height: 600px;
-    }
-
-    #terminal-container {
-      flex: 1;
-      padding: 10px;
-      background: #1e1e1e;
-      position: relative;
-    }
-
-    .info-box {
-      background: rgba(255, 255, 255, 0.1);
-      backdrop-filter: blur(10px);
-      padding: 15px;
-      border-radius: 10px;
-      color: white;
-      margin-top: 20px;
-    }
-
-    .info-box h3 {
-      margin-bottom: 10px;
-      font-size: 1.2rem;
-    }
-
-    .info-box ul {
-      list-style: none;
-      padding-left: 0;
-    }
-
-    .info-box li {
-      padding: 5px 0;
-      padding-left: 20px;
-      position: relative;
-    }
-
-    .info-box li:before {
-      content: "▸";
-      position: absolute;
-      left: 0;
-      color: #4CAF50;
-    }
-
-    .warning {
-      background: rgba(255, 152, 0, 0.2);
-      border-left: 4px solid #ff9800;
-      padding: 15px;
-      border-radius: 5px;
-      color: white;
-      margin-top: 20px;
-    }
-
-    .warning strong {
-      display: block;
-      margin-bottom: 5px;
-      color: #ffd54f;
-    }
-
-    code {
-      background: rgba(0, 0, 0, 0.3);
-      padding: 2px 6px;
-      border-radius: 3px;
-      font-family: 'Monaco', 'Menlo', monospace;
-      font-size: 0.9em;
-    }
-
-    @media (max-width: 768px) {
-      h1 {
-        font-size: 2rem;
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ghostty Terminal - File Browser</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
       }
-      
-      .status-bar {
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+        min-height: 100vh;
+        padding: 20px;
+        display: flex;
         flex-direction: column;
-        gap: 10px;
-        align-items: flex-start;
       }
-    }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <header>
-      <h1>🖥️ Ghostty Terminal</h1>
-      <p class="subtitle">WebAssembly-powered terminal with full filesystem access</p>
-    </header>
 
-    <div class="status-bar">
-      <div class="status-indicator">
-        <div class="status-dot" id="status-dot"></div>
-        <span id="status-text">Connecting...</span>
-      </div>
-      <div>
-        <small id="ws-url" style="opacity: 0.7; margin-right: 15px;"></small>
-        <span id="cwd-display">~/</span>
-      </div>
-    </div>
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        width: 100%;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+      }
 
-    <div class="terminal-wrapper">
-      <div id="terminal-container"></div>
-    </div>
+      header {
+        text-align: center;
+        color: white;
+        margin-bottom: 20px;
+      }
 
-    <div class="info-box">
-      <h3>📚 Available Commands</h3>
-      <ul>
-        <li><code>ls</code>, <code>ls -la</code> - List directory contents</li>
-        <li><code>cd &lt;path&gt;</code> - Change directory (supports <code>~</code>, <code>/</code>, <code>..</code>)</li>
-        <li><code>pwd</code> - Print working directory</li>
-        <li><code>cat &lt;file&gt;</code> - Display file contents</li>
-        <li><code>grep</code>, <code>find</code>, <code>tree</code> - Search and explore</li>
-        <li><code>whoami</code>, <code>hostname</code>, <code>date</code> - System info</li>
-        <li><code>clear</code> - Clear screen</li>
-        <li><code>exit</code> - Close connection</li>
-      </ul>
-    </div>
+      h1 {
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+      }
 
-    <div class="warning">
-      <strong>⚠️ Warning: Full Filesystem Access</strong>
-      This demo has unrestricted access to your entire filesystem. It's meant for local development and demonstration purposes only. Do not expose this to untrusted users or networks.
-    </div>
-  </div>
+      .subtitle {
+        opacity: 0.9;
+        font-size: 1.1rem;
+      }
 
-  <!-- Import Terminal from lib -->
-  <script type="module">
-    import { Terminal } from '../lib/index.ts';
-    import { FitAddon } from '../lib/addons/fit.ts';
+      .status-bar {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        padding: 15px 20px;
+        border-radius: 10px 10px 0 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        color: white;
+      }
 
-    // =========================================================================
-    // Configuration
-    // =========================================================================
+      .status-indicator {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
 
-    // Auto-detect hostname (works for localhost and remote hosts like mux.coder)
-    const hostname = window.location.hostname || 'localhost';
-    const WS_URL = `ws://${hostname}:3001/ws`;
-    let ws = null;
-    let term = null;
-    let fitAddon = null;
-    let currentLine = '';
-    let commandHistory = [];
-    let historyIndex = -1;
-    let currentCwd = '~';
-    let isPtyMode = true; // PTY mode sends raw keystrokes, command mode uses line editing
+      .status-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #ff4444;
+        animation: pulse 2s infinite;
+      }
 
-    // =========================================================================
-    // WebSocket Connection
-    // =========================================================================
+      .status-dot.connected {
+        background: #44ff44;
+      }
 
-    function connect() {
-      updateStatus('connecting', 'Connecting to server...');
-      
-      // Include terminal size in WebSocket URL
-      console.log(`Terminal dimensions at connect time: ${term.cols}x${term.rows}`);
-      const wsUrlWithSize = `${WS_URL}?cols=${term.cols}&rows=${term.rows}`;
-      console.log('Connecting to WebSocket:', wsUrlWithSize);
-      
-      // Show WebSocket URL in status bar
-      document.getElementById('ws-url').textContent = WS_URL;
-
-      ws = new WebSocket(wsUrlWithSize);
-
-      ws.onopen = () => {
-        updateStatus('connected', 'Connected (PTY mode)');
-        console.log('WebSocket connected - PTY mode active');
-        console.log('Terminal onData handler:', term.onData ? 'registered' : 'NOT REGISTERED');
-        
-        // Focus the terminal
-        term.focus();
-      };
-
-      ws.onmessage = (event) => {
-        // PTY server sends raw text, not JSON
-        const data = event.data;
-        console.log('WebSocket received:', typeof data, 'length:', data?.length, 'data:', JSON.stringify(data?.substring(0, 50)));
-        
-        // If it's a string (raw PTY output), write directly to terminal
-        if (typeof data === 'string') {
-          console.log('Writing to terminal:', JSON.stringify(data.substring(0, 50)));
-          term.write(data);
-        } 
-        // Otherwise try JSON parsing for file-browser-server compatibility
-        else {
-          try {
-            const jsonData = JSON.parse(data);
-            handleServerMessage(jsonData);
-          } catch (error) {
-            console.error('Failed to parse message:', error);
-          }
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
         }
-      };
+        50% {
+          opacity: 0.5;
+        }
+      }
 
-      ws.onerror = (error) => {
-        console.error('WebSocket error:', error);
-        updateStatus('error', 'Connection error');
-        term?.write('\r\n\x1b[1;31mWebSocket error. Check if server is running.\x1b[0m\r\n');
-      };
+      .terminal-wrapper {
+        background: white;
+        border-radius: 0 0 10px 10px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        overflow: hidden;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-height: 600px;
+      }
 
-      ws.onclose = () => {
-        updateStatus('disconnected', 'Disconnected');
-        console.log('WebSocket closed');
-        term?.write('\r\n\x1b[1;33mConnection closed.\x1b[0m\r\n');
-      };
-    }
+      #terminal-container {
+        flex: 1;
+        padding: 10px;
+        background: #1e1e1e;
+        position: relative;
+      }
 
-    function handleServerMessage(data) {
-      switch (data.type) {
-        case 'connected':
-          currentCwd = data.cwd;
-          updateCwdDisplay(currentCwd);
-          if (!isPtyMode) {
-            showWelcome();
-            showPrompt();
+      .info-box {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        padding: 15px;
+        border-radius: 10px;
+        color: white;
+        margin-top: 20px;
+      }
+
+      .info-box h3 {
+        margin-bottom: 10px;
+        font-size: 1.2rem;
+      }
+
+      .info-box ul {
+        list-style: none;
+        padding-left: 0;
+      }
+
+      .info-box li {
+        padding: 5px 0;
+        padding-left: 20px;
+        position: relative;
+      }
+
+      .info-box li:before {
+        content: '▸';
+        position: absolute;
+        left: 0;
+        color: #4caf50;
+      }
+
+      .warning {
+        background: rgba(255, 152, 0, 0.2);
+        border-left: 4px solid #ff9800;
+        padding: 15px;
+        border-radius: 5px;
+        color: white;
+        margin-top: 20px;
+      }
+
+      .warning strong {
+        display: block;
+        margin-bottom: 5px;
+        color: #ffd54f;
+      }
+
+      code {
+        background: rgba(0, 0, 0, 0.3);
+        padding: 2px 6px;
+        border-radius: 3px;
+        font-family: 'Monaco', 'Menlo', monospace;
+        font-size: 0.9em;
+      }
+
+      @media (max-width: 768px) {
+        h1 {
+          font-size: 2rem;
+        }
+
+        .status-bar {
+          flex-direction: column;
+          gap: 10px;
+          align-items: flex-start;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>🖥️ Ghostty Terminal</h1>
+        <p class="subtitle">WebAssembly-powered terminal with full filesystem access</p>
+      </header>
+
+      <div class="status-bar">
+        <div class="status-indicator">
+          <div class="status-dot" id="status-dot"></div>
+          <span id="status-text">Connecting...</span>
+        </div>
+        <div>
+          <small id="ws-url" style="opacity: 0.7; margin-right: 15px"></small>
+          <span id="cwd-display">~/</span>
+        </div>
+      </div>
+
+      <div class="terminal-wrapper">
+        <div id="terminal-container"></div>
+      </div>
+
+      <div class="info-box">
+        <h3>📚 Available Commands</h3>
+        <ul>
+          <li><code>ls</code>, <code>ls -la</code> - List directory contents</li>
+          <li>
+            <code>cd &lt;path&gt;</code> - Change directory (supports <code>~</code>,
+            <code>/</code>, <code>..</code>)
+          </li>
+          <li><code>pwd</code> - Print working directory</li>
+          <li><code>cat &lt;file&gt;</code> - Display file contents</li>
+          <li><code>grep</code>, <code>find</code>, <code>tree</code> - Search and explore</li>
+          <li><code>whoami</code>, <code>hostname</code>, <code>date</code> - System info</li>
+          <li><code>clear</code> - Clear screen</li>
+          <li><code>exit</code> - Close connection</li>
+        </ul>
+      </div>
+
+      <div class="warning">
+        <strong>⚠️ Warning: Full Filesystem Access</strong>
+        This demo has unrestricted access to your entire filesystem. It's meant for local
+        development and demonstration purposes only. Do not expose this to untrusted users or
+        networks.
+      </div>
+    </div>
+
+    <!-- Import Terminal from lib -->
+    <script type="module">
+      import { Terminal } from '../lib/index.ts';
+      import { FitAddon } from '../lib/addons/fit.ts';
+
+      // =========================================================================
+      // Configuration
+      // =========================================================================
+
+      // Auto-detect hostname (works for localhost and remote hosts like mux.coder)
+      const hostname = window.location.hostname || 'localhost';
+      const WS_URL = `ws://${hostname}:3001/ws`;
+      let ws = null;
+      let term = null;
+      let fitAddon = null;
+      let currentLine = '';
+      let commandHistory = [];
+      let historyIndex = -1;
+      let currentCwd = '~';
+      let isPtyMode = true; // PTY mode sends raw keystrokes, command mode uses line editing
+
+      // =========================================================================
+      // WebSocket Connection
+      // =========================================================================
+
+      function connect() {
+        updateStatus('connecting', 'Connecting to server...');
+
+        // Include terminal size in WebSocket URL
+        console.log(`Terminal dimensions at connect time: ${term.cols}x${term.rows}`);
+        const wsUrlWithSize = `${WS_URL}?cols=${term.cols}&rows=${term.rows}`;
+        console.log('Connecting to WebSocket:', wsUrlWithSize);
+
+        // Show WebSocket URL in status bar
+        document.getElementById('ws-url').textContent = WS_URL;
+
+        ws = new WebSocket(wsUrlWithSize);
+
+        ws.onopen = () => {
+          updateStatus('connected', 'Connected (PTY mode)');
+          console.log('WebSocket connected - PTY mode active');
+          console.log('Terminal onData handler:', term.onData ? 'registered' : 'NOT REGISTERED');
+
+          // Focus the terminal
+          term.focus();
+        };
+
+        ws.onmessage = (event) => {
+          // PTY server sends raw text, not JSON
+          const data = event.data;
+          console.log(
+            'WebSocket received:',
+            typeof data,
+            'length:',
+            data?.length,
+            'data:',
+            JSON.stringify(data?.substring(0, 50))
+          );
+
+          // If it's a string (raw PTY output), write directly to terminal
+          if (typeof data === 'string') {
+            console.log('Writing to terminal:', JSON.stringify(data.substring(0, 50)));
+            term.write(data);
           }
-          break;
-
-        case 'output':
-          // Display stdout
-          if (data.stdout) {
-            term.write(data.stdout.replace(/\n/g, '\r\n'));
+          // Otherwise try JSON parsing for file-browser-server compatibility
+          else {
+            try {
+              const jsonData = JSON.parse(data);
+              handleServerMessage(jsonData);
+            } catch (error) {
+              console.error('Failed to parse message:', error);
+            }
           }
+        };
 
-          // Display stderr in red
-          if (data.stderr) {
-            term.write(`\x1b[1;31m${data.stderr.replace(/\n/g, '\r\n')}\x1b[0m`);
-          }
+        ws.onerror = (error) => {
+          console.error('WebSocket error:', error);
+          updateStatus('error', 'Connection error');
+          term?.write('\r\n\x1b[1;31mWebSocket error. Check if server is running.\x1b[0m\r\n');
+        };
 
-          // Update CWD
-          if (data.cwd) {
+        ws.onclose = () => {
+          updateStatus('disconnected', 'Disconnected');
+          console.log('WebSocket closed');
+          term?.write('\r\n\x1b[1;33mConnection closed.\x1b[0m\r\n');
+        };
+      }
+
+      function handleServerMessage(data) {
+        switch (data.type) {
+          case 'connected':
             currentCwd = data.cwd;
             updateCwdDisplay(currentCwd);
-          }
+            if (!isPtyMode) {
+              showWelcome();
+              showPrompt();
+            }
+            break;
 
-          // Show new prompt
-          showPrompt();
-          break;
+          case 'output':
+            // Display stdout
+            if (data.stdout) {
+              term.write(data.stdout.replace(/\n/g, '\r\n'));
+            }
 
-        case 'error':
-          term.write(`\r\n\x1b[1;31mError: ${data.data}\x1b[0m\r\n`);
-          showPrompt();
-          break;
-      }
-    }
+            // Display stderr in red
+            if (data.stderr) {
+              term.write(`\x1b[1;31m${data.stderr.replace(/\n/g, '\r\n')}\x1b[0m`);
+            }
 
-    function sendCommand(command) {
-      if (ws && ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify({
-          type: 'command',
-          data: command,
-        }));
+            // Update CWD
+            if (data.cwd) {
+              currentCwd = data.cwd;
+              updateCwdDisplay(currentCwd);
+            }
 
-        // Add to history if not empty
-        if (command.trim()) {
-          commandHistory.push(command);
-          historyIndex = commandHistory.length;
+            // Show new prompt
+            showPrompt();
+            break;
+
+          case 'error':
+            term.write(`\r\n\x1b[1;31mError: ${data.data}\x1b[0m\r\n`);
+            showPrompt();
+            break;
         }
-      } else {
-        term.write('\r\n\x1b[1;31mNot connected to server.\x1b[0m\r\n');
-        showPrompt();
       }
-    }
 
-    // =========================================================================
-    // Terminal UI
-    // =========================================================================
-
-    function updateStatus(status, text) {
-      const dot = document.getElementById('status-dot');
-      const textEl = document.getElementById('status-text');
-      
-      dot.className = 'status-dot';
-      if (status === 'connected') {
-        dot.classList.add('connected');
-      }
-      
-      textEl.textContent = text;
-    }
-
-    function updateCwdDisplay(cwd) {
-      const display = document.getElementById('cwd-display');
-      // Shorten long paths
-      const shortened = cwd.replace(process.env.HOME || '/home/coder', '~');
-      display.textContent = shortened;
-    }
-
-    function showWelcome() {
-      term.write('\x1b[1;36m╔══════════════════════════════════════════════════════════════╗\x1b[0m\r\n');
-      term.write('\x1b[1;36m║\x1b[0m  \x1b[1;32mWelcome to File Browser Terminal!\x1b[0m                       \x1b[1;36m║\x1b[0m\r\n');
-      term.write('\x1b[1;36m║\x1b[0m                                                              \x1b[1;36m║\x1b[0m\r\n');
-      term.write('\x1b[1;36m║\x1b[0m  Type commands to navigate your filesystem.                  \x1b[1;36m║\x1b[0m\r\n');
-      term.write('\x1b[1;36m║\x1b[0m  Try: \x1b[1;33mls -la\x1b[0m, \x1b[1;33mcd /tmp\x1b[0m, \x1b[1;33mcat package.json\x1b[0m            \x1b[1;36m║\x1b[0m\r\n');
-      term.write('\x1b[1;36m║\x1b[0m                                                              \x1b[1;36m║\x1b[0m\r\n');
-      term.write('\x1b[1;36m║\x1b[0m  Use ↑/↓ for command history, Tab for... well, nothing yet  \x1b[1;36m║\x1b[0m\r\n');
-      term.write('\x1b[1;36m╚══════════════════════════════════════════════════════════════╝\x1b[0m\r\n');
-      term.write('\r\n');
-    }
-
-    function showPrompt() {
-      // Format: user@host:~/path $
-      const shortened = currentCwd.replace(process.env.HOME || '/home/coder', '~');
-      term.write(`\x1b[1;32m$\x1b[0m `);
-      currentLine = '';
-    }
-
-    function handleInput(data) {
-      console.log('handleInput called, data:', data, 'isPtyMode:', isPtyMode, 'ws state:', ws?.readyState);
-      
-      // PTY mode: send every keystroke directly to shell
-      if (isPtyMode) {
+      function sendCommand(command) {
         if (ws && ws.readyState === WebSocket.OPEN) {
-          console.log('Sending to shell:', JSON.stringify(data));
-          ws.send(data);
+          ws.send(
+            JSON.stringify({
+              type: 'command',
+              data: command,
+            })
+          );
+
+          // Add to history if not empty
+          if (command.trim()) {
+            commandHistory.push(command);
+            historyIndex = commandHistory.length;
+          }
         } else {
-          console.error('WebSocket not open, state:', ws?.readyState);
+          term.write('\r\n\x1b[1;31mNot connected to server.\x1b[0m\r\n');
+          showPrompt();
         }
-        return;
       }
 
-      // Command mode: line editing with prompt (for file-browser-server)
-      for (let i = 0; i < data.length; i++) {
-        const code = data.charCodeAt(i);
+      // =========================================================================
+      // Terminal UI
+      // =========================================================================
 
-        // Enter key
-        if (code === 13) {
-          term.write('\r\n');
-          if (currentLine.trim()) {
-            sendCommand(currentLine);
+      function updateStatus(status, text) {
+        const dot = document.getElementById('status-dot');
+        const textEl = document.getElementById('status-text');
+
+        dot.className = 'status-dot';
+        if (status === 'connected') {
+          dot.classList.add('connected');
+        }
+
+        textEl.textContent = text;
+      }
+
+      function updateCwdDisplay(cwd) {
+        const display = document.getElementById('cwd-display');
+        // Shorten long paths
+        const shortened = cwd.replace(process.env.HOME || '/home/coder', '~');
+        display.textContent = shortened;
+      }
+
+      function showWelcome() {
+        term.write(
+          '\x1b[1;36m╔══════════════════════════════════════════════════════════════╗\x1b[0m\r\n'
+        );
+        term.write(
+          '\x1b[1;36m║\x1b[0m  \x1b[1;32mWelcome to File Browser Terminal!\x1b[0m                       \x1b[1;36m║\x1b[0m\r\n'
+        );
+        term.write(
+          '\x1b[1;36m║\x1b[0m                                                              \x1b[1;36m║\x1b[0m\r\n'
+        );
+        term.write(
+          '\x1b[1;36m║\x1b[0m  Type commands to navigate your filesystem.                  \x1b[1;36m║\x1b[0m\r\n'
+        );
+        term.write(
+          '\x1b[1;36m║\x1b[0m  Try: \x1b[1;33mls -la\x1b[0m, \x1b[1;33mcd /tmp\x1b[0m, \x1b[1;33mcat package.json\x1b[0m            \x1b[1;36m║\x1b[0m\r\n'
+        );
+        term.write(
+          '\x1b[1;36m║\x1b[0m                                                              \x1b[1;36m║\x1b[0m\r\n'
+        );
+        term.write(
+          '\x1b[1;36m║\x1b[0m  Use ↑/↓ for command history, Tab for... well, nothing yet  \x1b[1;36m║\x1b[0m\r\n'
+        );
+        term.write(
+          '\x1b[1;36m╚══════════════════════════════════════════════════════════════╝\x1b[0m\r\n'
+        );
+        term.write('\r\n');
+      }
+
+      function showPrompt() {
+        // Format: user@host:~/path $
+        const shortened = currentCwd.replace(process.env.HOME || '/home/coder', '~');
+        term.write(`\x1b[1;32m$\x1b[0m `);
+        currentLine = '';
+      }
+
+      function handleInput(data) {
+        console.log(
+          'handleInput called, data:',
+          data,
+          'isPtyMode:',
+          isPtyMode,
+          'ws state:',
+          ws?.readyState
+        );
+
+        // PTY mode: send every keystroke directly to shell
+        if (isPtyMode) {
+          if (ws && ws.readyState === WebSocket.OPEN) {
+            console.log('Sending to shell:', JSON.stringify(data));
+            ws.send(data);
           } else {
+            console.error('WebSocket not open, state:', ws?.readyState);
+          }
+          return;
+        }
+
+        // Command mode: line editing with prompt (for file-browser-server)
+        for (let i = 0; i < data.length; i++) {
+          const code = data.charCodeAt(i);
+
+          // Enter key
+          if (code === 13) {
+            term.write('\r\n');
+            if (currentLine.trim()) {
+              sendCommand(currentLine);
+            } else {
+              showPrompt();
+            }
+            currentLine = '';
+          }
+          // Backspace or Delete
+          else if (code === 127 || code === 8) {
+            if (currentLine.length > 0) {
+              currentLine = currentLine.slice(0, -1);
+              term.write('\b \b');
+            }
+          }
+          // Ctrl+C
+          else if (code === 3) {
+            term.write('^C\r\n');
+            currentLine = '';
             showPrompt();
           }
-          currentLine = '';
-        }
-        // Backspace or Delete
-        else if (code === 127 || code === 8) {
-          if (currentLine.length > 0) {
-            currentLine = currentLine.slice(0, -1);
-            term.write('\b \b');
+          // Ctrl+D (EOF)
+          else if (code === 4) {
+            if (currentLine.length === 0) {
+              sendCommand('exit');
+            }
           }
-        }
-        // Ctrl+C
-        else if (code === 3) {
-          term.write('^C\r\n');
-          currentLine = '';
-          showPrompt();
-        }
-        // Ctrl+D (EOF)
-        else if (code === 4) {
-          if (currentLine.length === 0) {
-            sendCommand('exit');
+          // Ctrl+L (clear)
+          else if (code === 12) {
+            term.clear();
+            showPrompt();
           }
-        }
-        // Ctrl+L (clear)
-        else if (code === 12) {
-          term.clear();
-          showPrompt();
-        }
-        // Arrow Up (previous command)
-        else if (code === 27 && data[i + 1] === '[' && data[i + 2] === 'A') {
-          if (historyIndex > 0) {
+          // Arrow Up (previous command)
+          else if (code === 27 && data[i + 1] === '[' && data[i + 2] === 'A') {
+            if (historyIndex > 0) {
+              // Clear current line
+              term.write('\r\x1b[K');
+              showPrompt();
+
+              // Show previous command
+              historyIndex--;
+              currentLine = commandHistory[historyIndex];
+              term.write(currentLine);
+            }
+            i += 2; // Skip the rest of the escape sequence
+          }
+          // Arrow Down (next command)
+          else if (code === 27 && data[i + 1] === '[' && data[i + 2] === 'B') {
             // Clear current line
             term.write('\r\x1b[K');
             showPrompt();
-            
-            // Show previous command
-            historyIndex--;
-            currentLine = commandHistory[historyIndex];
+
+            if (historyIndex < commandHistory.length - 1) {
+              historyIndex++;
+              currentLine = commandHistory[historyIndex];
+            } else {
+              historyIndex = commandHistory.length;
+              currentLine = '';
+            }
             term.write(currentLine);
+            i += 2; // Skip the rest of the escape sequence
           }
-          i += 2; // Skip the rest of the escape sequence
-        }
-        // Arrow Down (next command)
-        else if (code === 27 && data[i + 1] === '[' && data[i + 2] === 'B') {
-          // Clear current line
-          term.write('\r\x1b[K');
-          showPrompt();
-          
-          if (historyIndex < commandHistory.length - 1) {
-            historyIndex++;
-            currentLine = commandHistory[historyIndex];
-          } else {
-            historyIndex = commandHistory.length;
-            currentLine = '';
+          // Regular printable character
+          else if (code >= 32 && code < 127) {
+            currentLine += data[i];
+            term.write(data[i]);
           }
-          term.write(currentLine);
-          i += 2; // Skip the rest of the escape sequence
-        }
-        // Regular printable character
-        else if (code >= 32 && code < 127) {
-          currentLine += data[i];
-          term.write(data[i]);
         }
       }
-    }
 
-    // =========================================================================
-    // Text Selection Support
-    // =========================================================================
-    
-    // Text selection is now built-in to the Terminal library!
-    // Use term.getSelection() to access selected text programmatically.
-    // Features:
-    // - Click and drag to select text
-    // - Double-click to select a word
-    // - Auto-copy to clipboard on selection
-    // - Ctrl+C / Cmd+C to copy (via browser context menu)
+      // =========================================================================
+      // Text Selection Support
+      // =========================================================================
 
-    // =========================================================================
-    // Initialization
-    // =========================================================================
+      // Text selection is now built-in to the Terminal library!
+      // Use term.getSelection() to access selected text programmatically.
+      // Features:
+      // - Click and drag to select text
+      // - Double-click to select a word
+      // - Auto-copy to clipboard on selection
+      // - Ctrl+C / Cmd+C to copy (via browser context menu)
 
-    async function init() {
-      try {
-        // Create terminal with selection enabled
-        term = new Terminal({
-          cols: 80,
-          rows: 30,
-          cursorBlink: true,
-          theme: {
-            background: '#1e1e1e',
-            foreground: '#d4d4d4',
-            cursor: '#ffffff',
-            cursorAccent: '#000000',
-            selectionBackground: '#264f78',
-            selectionForeground: '#ffffff',
-            black: '#000000',
-            red: '#cd3131',
-            green: '#0dbc79',
-            yellow: '#e5e510',
-            blue: '#2472c8',
-            magenta: '#bc3fbc',
-            cyan: '#11a8cd',
-            white: '#e5e5e5',
-            brightBlack: '#666666',
-            brightRed: '#f14c4c',
-            brightGreen: '#23d18b',
-            brightYellow: '#f5f543',
-            brightBlue: '#3b8eea',
-            brightMagenta: '#d670d6',
-            brightCyan: '#29b8db',
-            brightWhite: '#ffffff',
-          },
-          fontFamily: "'Monaco', 'Menlo', 'Consolas', 'Courier New', monospace",
-          fontSize: 14,
-          scrollback: 10000,
-        });
+      // =========================================================================
+      // Initialization
+      // =========================================================================
 
-        // Create FitAddon
-        fitAddon = new FitAddon();
-        term.loadAddon(fitAddon);
+      async function init() {
+        try {
+          // Create terminal with selection enabled
+          term = new Terminal({
+            cols: 80,
+            rows: 30,
+            cursorBlink: true,
+            theme: {
+              background: '#1e1e1e',
+              foreground: '#d4d4d4',
+              cursor: '#ffffff',
+              cursorAccent: '#000000',
+              selectionBackground: '#264f78',
+              selectionForeground: '#ffffff',
+              black: '#000000',
+              red: '#cd3131',
+              green: '#0dbc79',
+              yellow: '#e5e510',
+              blue: '#2472c8',
+              magenta: '#bc3fbc',
+              cyan: '#11a8cd',
+              white: '#e5e5e5',
+              brightBlack: '#666666',
+              brightRed: '#f14c4c',
+              brightGreen: '#23d18b',
+              brightYellow: '#f5f543',
+              brightBlue: '#3b8eea',
+              brightMagenta: '#d670d6',
+              brightCyan: '#29b8db',
+              brightWhite: '#ffffff',
+            },
+            fontFamily: "'Monaco', 'Menlo', 'Consolas', 'Courier New', monospace",
+            fontSize: 14,
+            scrollback: 10000,
+          });
 
-        // Open terminal
-        const container = document.getElementById('terminal-container');
-        await term.open(container);
+          // Create FitAddon
+          fitAddon = new FitAddon();
+          term.loadAddon(fitAddon);
 
-        // Fit terminal to container
-        fitAddon.fit();
-        console.log(`After fit(): Terminal size is ${term.cols}x${term.rows}`);
+          // Open terminal
+          const container = document.getElementById('terminal-container');
+          await term.open(container);
 
-        // Handle window resize
-        window.addEventListener('resize', () => {
+          // Fit terminal to container
           fitAddon.fit();
-        });
+          console.log(`After fit(): Terminal size is ${term.cols}x${term.rows}`);
 
-        // Send resize notifications to server
-        term.onResize(({ cols, rows }) => {
-          if (ws && ws.readyState === WebSocket.OPEN) {
-            ws.send(JSON.stringify({ type: 'resize', cols, rows }));
-            console.log(`Sent resize to server: ${cols}x${rows}`);
-          }
-        });
+          // Handle window resize
+          window.addEventListener('resize', () => {
+            fitAddon.fit();
+          });
 
-        // Handle input
-        term.onData(handleInput);
+          // Send resize notifications to server
+          term.onResize(({ cols, rows }) => {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+              ws.send(JSON.stringify({ type: 'resize', cols, rows }));
+              console.log(`Sent resize to server: ${cols}x${rows}`);
+            }
+          });
 
-        // Text selection is now built-in - no need to enable it!
-        // You can use term.getSelection(), term.selectAll(), etc.
+          // Handle input
+          term.onData(handleInput);
 
-        // Connect to WebSocket server
-        connect();
+          // Text selection is now built-in - no need to enable it!
+          // You can use term.getSelection(), term.selectAll(), etc.
 
-      } catch (error) {
-        console.error('Failed to initialize terminal:', error);
-        updateStatus('error', 'Initialization failed');
+          // Connect to WebSocket server
+          connect();
+        } catch (error) {
+          console.error('Failed to initialize terminal:', error);
+          updateStatus('error', 'Initialization failed');
+        }
       }
-    }
 
-    // Start when page loads
-    init();
-  </script>
-</body>
+      // Start when page loads
+      init();
+    </script>
+  </body>
 </html>

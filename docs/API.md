@@ -58,7 +58,7 @@ const term = new Terminal({
   theme: {
     background: '#1e1e1e',
     foreground: '#d4d4d4',
-  }
+  },
 });
 
 // Add FitAddon for responsive sizing
@@ -77,7 +77,7 @@ term.write('Hello, World!\r\n');
 term.write('\x1b[1;32mGreen text\x1b[0m\r\n');
 
 // Handle user input
-term.onData(data => {
+term.onData((data) => {
   console.log('User typed:', data);
   // Echo back
   term.write(data);
@@ -99,9 +99,11 @@ new Terminal(options?: ITerminalOptions)
 Creates a new terminal instance with optional configuration.
 
 **Parameters:**
+
 - `options` (optional): Configuration options (see [ITerminalOptions](#iterminaloptions))
 
 **Example:**
+
 ```typescript
 const term = new Terminal({
   cols: 80,
@@ -119,11 +121,13 @@ const term = new Terminal({
 Opens the terminal in a parent DOM element. This initializes all components (buffer, parser, renderer, input handler) and starts rendering.
 
 **Parameters:**
+
 - `parent`: The DOM element to render the terminal into
 
 **Returns:** Promise that resolves when terminal is ready
 
 **Example:**
+
 ```typescript
 const container = document.getElementById('terminal');
 await term.open(container);
@@ -138,9 +142,11 @@ await term.open(container);
 Writes data to the terminal. Supports plain text and ANSI escape sequences.
 
 **Parameters:**
+
 - `data`: String to write (may contain ANSI escape codes)
 
 **Example:**
+
 ```typescript
 term.write('Hello, World!\r\n');
 term.write('\x1b[1;31mRed bold text\x1b[0m\r\n');
@@ -148,6 +154,7 @@ term.write('Line 1\r\nLine 2\r\n');
 ```
 
 **ANSI Sequences Supported:**
+
 - Colors: `\x1b[30-37m` (fg), `\x1b[40-47m` (bg), `\x1b[90-97m` (bright fg)
 - Styles: `\x1b[1m` (bold), `\x1b[3m` (italic), `\x1b[4m` (underline)
 - Cursor: `\x1b[H` (home), `\x1b[<row>;<col>H` (position)
@@ -162,9 +169,11 @@ term.write('Line 1\r\nLine 2\r\n');
 Writes data followed by a newline (`\r\n`).
 
 **Parameters:**
+
 - `data`: String to write
 
 **Example:**
+
 ```typescript
 term.writeln('Line 1');
 term.writeln('Line 2');
@@ -180,6 +189,7 @@ term.writeln('Line 2');
 Clears the terminal screen (erases all content).
 
 **Example:**
+
 ```typescript
 term.clear();
 ```
@@ -191,6 +201,7 @@ term.clear();
 Resets the terminal to initial state. Clears screen, resets cursor, and clears styles.
 
 **Example:**
+
 ```typescript
 term.reset();
 ```
@@ -202,10 +213,12 @@ term.reset();
 Resizes the terminal dimensions.
 
 **Parameters:**
+
 - `cols`: New column count
 - `rows`: New row count
 
 **Example:**
+
 ```typescript
 term.resize(100, 30);
 ```
@@ -219,6 +232,7 @@ term.resize(100, 30);
 Gives keyboard focus to the terminal.
 
 **Example:**
+
 ```typescript
 term.focus();
 ```
@@ -230,6 +244,7 @@ term.focus();
 Removes keyboard focus from the terminal.
 
 **Example:**
+
 ```typescript
 term.blur();
 ```
@@ -241,9 +256,11 @@ term.blur();
 Loads an addon into the terminal.
 
 **Parameters:**
+
 - `addon`: Addon instance implementing `ITerminalAddon`
 
 **Example:**
+
 ```typescript
 const fitAddon = new FitAddon();
 term.loadAddon(fitAddon);
@@ -256,6 +273,7 @@ term.loadAddon(fitAddon);
 Disposes the terminal and cleans up resources. Removes from DOM and stops rendering.
 
 **Example:**
+
 ```typescript
 term.dispose();
 ```
@@ -271,9 +289,11 @@ term.dispose();
 Fired when user types in the terminal. Use this to send input to your backend (PTY, WebSocket, etc.).
 
 **Callback Parameter:**
+
 - `data`: String containing user input (may include escape sequences for special keys)
 
 **Special Keys:**
+
 - Enter: `\r`
 - Backspace: `\x7F` or `\x08`
 - Tab: `\t`
@@ -284,8 +304,9 @@ Fired when user types in the terminal. Use this to send input to your backend (P
 - Arrow Left: `\x1b[D`
 
 **Example:**
+
 ```typescript
-term.onData(data => {
+term.onData((data) => {
   if (data === '\r') {
     console.log('User pressed Enter');
   } else if (data === '\x7F') {
@@ -293,18 +314,19 @@ term.onData(data => {
   } else {
     console.log('User typed:', data);
   }
-  
+
   // Echo back
   term.write(data);
 });
 ```
 
 **WebSocket Example:**
+
 ```typescript
 const ws = new WebSocket('ws://localhost:3000');
 
 // Send user input to backend
-term.onData(data => {
+term.onData((data) => {
   ws.send(JSON.stringify({ type: 'input', data }));
 });
 
@@ -322,9 +344,11 @@ ws.onmessage = (event) => {
 Fired when terminal is resized.
 
 **Callback Parameter:**
+
 - Object with `cols` and `rows` properties
 
 **Example:**
+
 ```typescript
 term.onResize(({ cols, rows }) => {
   console.log(`Terminal resized to ${cols}x${rows}`);
@@ -340,6 +364,7 @@ term.onResize(({ cols, rows }) => {
 Fired when terminal receives a bell character (`\x07`).
 
 **Example:**
+
 ```typescript
 term.onBell(() => {
   console.log('Bell!');
@@ -357,6 +382,7 @@ term.onBell(() => {
 Current number of columns (read-only).
 
 **Example:**
+
 ```typescript
 console.log(`Terminal has ${term.cols} columns`);
 ```
@@ -368,6 +394,7 @@ console.log(`Terminal has ${term.cols} columns`);
 Current number of rows (read-only).
 
 **Example:**
+
 ```typescript
 console.log(`Terminal has ${term.rows} rows`);
 ```
@@ -379,6 +406,7 @@ console.log(`Terminal has ${term.rows} rows`);
 The DOM element containing the terminal (set after `open()`).
 
 **Example:**
+
 ```typescript
 if (term.element) {
   term.element.style.border = '1px solid #ccc';
@@ -401,16 +429,16 @@ Configuration options for Terminal constructor.
 
 ```typescript
 interface ITerminalOptions {
-  cols?: number;              // Default: 80
-  rows?: number;              // Default: 24
-  cursorBlink?: boolean;      // Default: false
-  cursorStyle?: 'block' | 'underline' | 'bar';  // Default: 'block'
-  theme?: ITheme;             // Custom theme
-  scrollback?: number;        // Default: 1000 lines
-  fontSize?: number;          // Default: 15
-  fontFamily?: string;        // Default: 'monospace'
+  cols?: number; // Default: 80
+  rows?: number; // Default: 24
+  cursorBlink?: boolean; // Default: false
+  cursorStyle?: 'block' | 'underline' | 'bar'; // Default: 'block'
+  theme?: ITheme; // Custom theme
+  scrollback?: number; // Default: 1000 lines
+  fontSize?: number; // Default: 15
+  fontFamily?: string; // Default: 'monospace'
   allowTransparency?: boolean; // Default: false
-  wasmPath?: string;          // Path to ghostty-vt.wasm
+  wasmPath?: string; // Path to ghostty-vt.wasm
 }
 ```
 
@@ -431,6 +459,7 @@ interface ITerminalOptions {
 - **`wasmPath`**: Path to `ghostty-vt.wasm` file (relative to HTML file)
 
 **Example:**
+
 ```typescript
 const term = new Terminal({
   cols: 120,
@@ -443,7 +472,7 @@ const term = new Terminal({
   theme: {
     background: '#1e1e1e',
     foreground: '#d4d4d4',
-  }
+  },
 });
 ```
 
@@ -455,30 +484,30 @@ Color scheme configuration.
 
 ```typescript
 interface ITheme {
-  foreground?: string;          // Default text color
-  background?: string;          // Background color
-  cursor?: string;              // Cursor color
-  cursorAccent?: string;        // Cursor text color
+  foreground?: string; // Default text color
+  background?: string; // Background color
+  cursor?: string; // Cursor color
+  cursorAccent?: string; // Cursor text color
   selectionBackground?: string; // Selection highlight color
   selectionForeground?: string; // Selection text color
-  
+
   // ANSI colors (0-15)
-  black?: string;           // Color 0
-  red?: string;             // Color 1
-  green?: string;           // Color 2
-  yellow?: string;          // Color 3
-  blue?: string;            // Color 4
-  magenta?: string;         // Color 5
-  cyan?: string;            // Color 6
-  white?: string;           // Color 7
-  brightBlack?: string;     // Color 8
-  brightRed?: string;       // Color 9
-  brightGreen?: string;     // Color 10
-  brightYellow?: string;    // Color 11
-  brightBlue?: string;      // Color 12
-  brightMagenta?: string;   // Color 13
-  brightCyan?: string;      // Color 14
-  brightWhite?: string;     // Color 15
+  black?: string; // Color 0
+  red?: string; // Color 1
+  green?: string; // Color 2
+  yellow?: string; // Color 3
+  blue?: string; // Color 4
+  magenta?: string; // Color 5
+  cyan?: string; // Color 6
+  white?: string; // Color 7
+  brightBlack?: string; // Color 8
+  brightRed?: string; // Color 9
+  brightGreen?: string; // Color 10
+  brightYellow?: string; // Color 11
+  brightBlue?: string; // Color 12
+  brightMagenta?: string; // Color 13
+  brightCyan?: string; // Color 14
+  brightWhite?: string; // Color 15
 }
 ```
 
@@ -632,9 +661,9 @@ class LoggerAddon implements ITerminalAddon {
 
   activate(terminal: ITerminalCore): void {
     this.terminal = terminal;
-    
+
     // Subscribe to data events
-    this.dataListener = terminal.onData(data => {
+    this.dataListener = terminal.onData((data) => {
       console.log('Terminal data:', data);
     });
   }
@@ -739,7 +768,7 @@ await term.open(document.getElementById('terminal'));
 
 term.write('Type something:\r\n$ ');
 
-term.onData(data => {
+term.onData((data) => {
   if (data === '\r') {
     term.write('\r\n$ ');
   } else if (data === '\x7F') {
@@ -763,7 +792,7 @@ let currentLine = '';
 
 ws.onmessage = (event) => {
   const msg = JSON.parse(event.data);
-  
+
   if (msg.type === 'output') {
     term.write(msg.stdout.replace(/\n/g, '\r\n'));
     if (msg.stderr) {
@@ -773,7 +802,7 @@ ws.onmessage = (event) => {
   }
 };
 
-term.onData(data => {
+term.onData((data) => {
   if (data === '\r') {
     ws.send(JSON.stringify({ type: 'command', data: currentLine }));
     term.write('\r\n');
@@ -816,7 +845,7 @@ const term = new Terminal({
     brightMagenta: '#c678dd',
     brightCyan: '#56b6c2',
     brightWhite: '#ffffff',
-  }
+  },
 });
 ```
 
@@ -827,12 +856,11 @@ const term = new Terminal({
 ```typescript
 function showProgress(percent: number) {
   const width = 40;
-  const filled = Math.floor(width * percent / 100);
+  const filled = Math.floor((width * percent) / 100);
   const empty = width - filled;
-  
-  const bar = '\x1b[32m' + '█'.repeat(filled) + 
-              '\x1b[90m' + '░'.repeat(empty) + '\x1b[0m';
-  
+
+  const bar = '\x1b[32m' + '█'.repeat(filled) + '\x1b[90m' + '░'.repeat(empty) + '\x1b[0m';
+
   term.write(`\r[${bar}] ${percent}%`);
 }
 
@@ -856,28 +884,29 @@ This library provides an xterm.js-compatible API for easy migration.
 
 ### API Compatibility
 
-| Feature | xterm.js | ghostty-terminal | Notes |
-|---------|----------|------------------|-------|
-| `new Terminal(options)` | ✅ | ✅ | Same API |
-| `term.open(parent)` | ✅ | ✅ | Returns Promise in ghostty-terminal |
-| `term.write(data)` | ✅ | ✅ | Same |
-| `term.writeln(data)` | ✅ | ✅ | Same |
-| `term.onData` | ✅ | ✅ | Same |
-| `term.onResize` | ✅ | ✅ | Same |
-| `term.resize(cols, rows)` | ✅ | ✅ | Same |
-| `term.clear()` | ✅ | ✅ | Same |
-| `term.reset()` | ✅ | ✅ | Same |
-| `term.dispose()` | ✅ | ✅ | Same |
-| `FitAddon` | ✅ | ✅ | Same API |
-| Selection API | ✅ | ❌ | Not yet implemented |
-| `term.scrollToBottom()` | ✅ | ❌ | Not yet implemented |
-| `term.scrollLines(n)` | ✅ | ❌ | Not yet implemented |
-| Weblinks addon | ✅ | ❌ | Not yet implemented |
-| Search addon | ✅ | ❌ | Not yet implemented |
+| Feature                   | xterm.js | ghostty-terminal | Notes                               |
+| ------------------------- | -------- | ---------------- | ----------------------------------- |
+| `new Terminal(options)`   | ✅       | ✅               | Same API                            |
+| `term.open(parent)`       | ✅       | ✅               | Returns Promise in ghostty-terminal |
+| `term.write(data)`        | ✅       | ✅               | Same                                |
+| `term.writeln(data)`      | ✅       | ✅               | Same                                |
+| `term.onData`             | ✅       | ✅               | Same                                |
+| `term.onResize`           | ✅       | ✅               | Same                                |
+| `term.resize(cols, rows)` | ✅       | ✅               | Same                                |
+| `term.clear()`            | ✅       | ✅               | Same                                |
+| `term.reset()`            | ✅       | ✅               | Same                                |
+| `term.dispose()`          | ✅       | ✅               | Same                                |
+| `FitAddon`                | ✅       | ✅               | Same API                            |
+| Selection API             | ✅       | ❌               | Not yet implemented                 |
+| `term.scrollToBottom()`   | ✅       | ❌               | Not yet implemented                 |
+| `term.scrollLines(n)`     | ✅       | ❌               | Not yet implemented                 |
+| Weblinks addon            | ✅       | ❌               | Not yet implemented                 |
+| Search addon              | ✅       | ❌               | Not yet implemented                 |
 
 ### Migration Example
 
 **Before (xterm.js):**
+
 ```typescript
 import { Terminal } from 'xterm';
 import { FitAddon } from 'xterm-addon-fit';
@@ -890,6 +919,7 @@ fitAddon.fit();
 ```
 
 **After (ghostty-terminal):**
+
 ```typescript
 import { Terminal } from './lib/index.ts';
 import { FitAddon } from './lib/addons/fit.ts';
@@ -902,6 +932,7 @@ fitAddon.fit();
 ```
 
 **Key Differences:**
+
 1. `term.open()` is async (returns Promise) - add `await`
 2. Import paths are different
 3. Some addons not yet available
@@ -915,6 +946,7 @@ fitAddon.fit();
 **Problem:** Terminal container is empty
 
 **Solutions:**
+
 1. Make sure you `await term.open(container)`
 2. Check container has non-zero dimensions
 3. Check console for errors
@@ -932,13 +964,14 @@ await term.open(container);
 **Problem:** `Failed to fetch ghostty-vt.wasm`
 
 **Solutions:**
+
 1. Verify `ghostty-vt.wasm` exists in correct location
 2. Serve via HTTP server (not file://)
 3. Set correct `wasmPath` in options
 
 ```typescript
 const term = new Terminal({
-  wasmPath: '/path/to/ghostty-vt.wasm'
+  wasmPath: '/path/to/ghostty-vt.wasm',
 });
 ```
 
@@ -949,6 +982,7 @@ const term = new Terminal({
 **Problem:** ANSI colors show as plain text
 
 **Solutions:**
+
 1. Verify escape sequences are correct: `\x1b[31m` not `\\x1b[31m`
 2. Check theme colors are set
 3. Use `\r\n` for newlines, not just `\n`
@@ -968,12 +1002,13 @@ term.write('\x1b[31mRed\x1b[0m\r\n');
 **Problem:** Keyboard input doesn't trigger `onData`
 
 **Solutions:**
+
 1. Make sure terminal is focused: `term.focus()`
 2. Check `onData` listener is attached
 3. Click on terminal to give it focus
 
 ```typescript
-term.onData(data => {
+term.onData((data) => {
   console.log('Got data:', data);
 });
 term.focus();
@@ -986,6 +1021,7 @@ term.focus();
 **Problem:** Rendering is slow or laggy
 
 **Solutions:**
+
 1. Reduce terminal size (cols × rows)
 2. Limit output rate (buffer large writes)
 3. Reduce scrollback buffer size
@@ -995,14 +1031,14 @@ term.focus();
 function writeAsync(data: string) {
   const chunks = data.match(/.{1,1000}/g) || [];
   let i = 0;
-  
+
   function writeNext() {
     if (i < chunks.length) {
       term.write(chunks[i++]);
       setTimeout(writeNext, 10);
     }
   }
-  
+
   writeNext();
 }
 ```
@@ -1014,6 +1050,7 @@ function writeAsync(data: string) {
 **Problem:** Terminal doesn't resize to fit container
 
 **Solutions:**
+
 1. Make sure container has explicit dimensions (CSS)
 2. Call `fitAddon.fit()` after opening terminal
 3. Use `fitAddon.observeResize()` for automatic resizing

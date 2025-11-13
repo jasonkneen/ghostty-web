@@ -1,13 +1,13 @@
 /**
  * File Browser WebSocket Server
- * 
+ *
  * Provides a WebSocket server that executes real shell commands
  * and allows full filesystem navigation.
- * 
+ *
  * ⚠️  WARNING: This server has FULL filesystem access.
  *     Only run locally for development/demo purposes.
  *     DO NOT expose to untrusted users or networks.
- * 
+ *
  * Usage:
  *   bun run file-browser-server.ts
  */
@@ -38,14 +38,17 @@ const sessions = new Map<any, Session>();
 /**
  * Execute a shell command and return output
  */
-async function executeCommand(command: string, cwd: string): Promise<{
+async function executeCommand(
+  command: string,
+  cwd: string
+): Promise<{
   stdout: string;
   stderr: string;
   exitCode: number;
   newCwd: string;
 }> {
   const trimmedCmd = command.trim();
-  
+
   // Handle empty command
   if (!trimmedCmd) {
     return {
@@ -196,107 +199,115 @@ let server;
 try {
   server = Bun.serve({
     port: PORT,
-  
-  async fetch(req, server) {
-    // Upgrade HTTP request to WebSocket
-    const url = new URL(req.url);
-    
-    if (url.pathname === '/ws') {
-      const success = server.upgrade(req);
-      if (success) {
-        return undefined;
-      }
-      return new Response('WebSocket upgrade failed', { status: 500 });
-    }
-    
-    // Health check endpoint
-    if (url.pathname === '/health') {
-      return new Response('OK', { status: 200 });
-    }
-    
-    return new Response('File Browser WebSocket Server\n\nConnect to ws://localhost:3001/ws', {
-      status: 200,
-      headers: { 'Content-Type': 'text/plain' },
-    });
-  },
 
-  websocket: {
-    open(ws) {
-      // Create new session for this client
-      const session: Session = {
-        cwd: DEFAULT_CWD,
-        id: Math.random().toString(36).substring(7),
-      };
-      sessions.set(ws, session);
+    async fetch(req, server) {
+      // Upgrade HTTP request to WebSocket
+      const url = new URL(req.url);
 
-      console.log(`[${session.id}] Client connected`);
-
-      // Send welcome message
-      ws.send(JSON.stringify({
-        type: 'connected',
-        cwd: session.cwd,
-        message: 'Connected to File Browser Server',
-      }));
-    },
-
-    async message(ws, message) {
-      const session = sessions.get(ws);
-      if (!session) {
-        ws.send(JSON.stringify({
-          type: 'error',
-          data: 'Session not found',
-        }));
-        return;
-      }
-
-      try {
-        const data = JSON.parse(message as string);
-
-        if (data.type === 'command') {
-          const command = data.data;
-          console.log(`[${session.id}] Executing: ${command} (cwd: ${session.cwd})`);
-
-          const result = await executeCommand(command, session.cwd);
-
-          // Update session CWD if it changed
-          session.cwd = result.newCwd;
-
-          // Send result back to client
-          ws.send(JSON.stringify({
-            type: 'output',
-            stdout: result.stdout,
-            stderr: result.stderr,
-            exitCode: result.exitCode,
-            cwd: session.cwd,
-          }));
-
-          // Handle 'exit' command
-          if (command.trim() === 'exit' || command.trim() === 'quit') {
-            ws.close();
-          }
+      if (url.pathname === '/ws') {
+        const success = server.upgrade(req);
+        if (success) {
+          return undefined;
         }
-      } catch (error: any) {
-        console.error(`[${session?.id}] Error:`, error);
-        ws.send(JSON.stringify({
-          type: 'error',
-          data: `Server error: ${error.message}`,
-        }));
+        return new Response('WebSocket upgrade failed', { status: 500 });
       }
+
+      // Health check endpoint
+      if (url.pathname === '/health') {
+        return new Response('OK', { status: 200 });
+      }
+
+      return new Response('File Browser WebSocket Server\n\nConnect to ws://localhost:3001/ws', {
+        status: 200,
+        headers: { 'Content-Type': 'text/plain' },
+      });
     },
 
-    close(ws) {
-      const session = sessions.get(ws);
-      if (session) {
-        console.log(`[${session.id}] Client disconnected`);
-        sessions.delete(ws);
-      }
-    },
+    websocket: {
+      open(ws) {
+        // Create new session for this client
+        const session: Session = {
+          cwd: DEFAULT_CWD,
+          id: Math.random().toString(36).substring(7),
+        };
+        sessions.set(ws, session);
 
-    error(ws, error) {
-      const session = sessions.get(ws);
-      console.error(`[${session?.id}] WebSocket error:`, error);
+        console.log(`[${session.id}] Client connected`);
+
+        // Send welcome message
+        ws.send(
+          JSON.stringify({
+            type: 'connected',
+            cwd: session.cwd,
+            message: 'Connected to File Browser Server',
+          })
+        );
+      },
+
+      async message(ws, message) {
+        const session = sessions.get(ws);
+        if (!session) {
+          ws.send(
+            JSON.stringify({
+              type: 'error',
+              data: 'Session not found',
+            })
+          );
+          return;
+        }
+
+        try {
+          const data = JSON.parse(message as string);
+
+          if (data.type === 'command') {
+            const command = data.data;
+            console.log(`[${session.id}] Executing: ${command} (cwd: ${session.cwd})`);
+
+            const result = await executeCommand(command, session.cwd);
+
+            // Update session CWD if it changed
+            session.cwd = result.newCwd;
+
+            // Send result back to client
+            ws.send(
+              JSON.stringify({
+                type: 'output',
+                stdout: result.stdout,
+                stderr: result.stderr,
+                exitCode: result.exitCode,
+                cwd: session.cwd,
+              })
+            );
+
+            // Handle 'exit' command
+            if (command.trim() === 'exit' || command.trim() === 'quit') {
+              ws.close();
+            }
+          }
+        } catch (error: any) {
+          console.error(`[${session?.id}] Error:`, error);
+          ws.send(
+            JSON.stringify({
+              type: 'error',
+              data: `Server error: ${error.message}`,
+            })
+          );
+        }
+      },
+
+      close(ws) {
+        const session = sessions.get(ws);
+        if (session) {
+          console.log(`[${session.id}] Client disconnected`);
+          sessions.delete(ws);
+        }
+      },
+
+      error(ws, error) {
+        const session = sessions.get(ws);
+        console.error(`[${session?.id}] WebSocket error:`, error);
+      },
     },
-  },
   });
 
   // ============================================================================
@@ -314,10 +325,9 @@ try {
   console.log('   DO NOT expose to untrusted users or networks.\n');
   console.log('='.repeat(60));
   console.log('Server is running. Press Ctrl+C to stop.\n');
-
 } catch (error: any) {
   console.error('\n❌ Failed to start server!\n');
-  
+
   if (error.code === 'EADDRINUSE') {
     console.error(`Port ${PORT} is already in use.`);
     console.error('\nTo fix this:');
@@ -327,6 +337,6 @@ try {
   } else {
     console.error('Error:', error.message);
   }
-  
+
   process.exit(1);
 }

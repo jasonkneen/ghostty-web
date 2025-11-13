@@ -1,13 +1,13 @@
 /**
  * InputHandler - Converts browser keyboard events to terminal input
- * 
+ *
  * Handles:
  * - Keyboard event listening on a container element
  * - Mapping KeyboardEvent.code to USB HID Key codes
  * - Extracting modifier keys (Ctrl, Alt, Shift, Meta)
  * - Encoding keys using Ghostty's KeyEncoder
  * - Emitting data for Terminal to send to PTY
- * 
+ *
  * Limitations:
  * - Does not handle IME/composition events (CJK input) - to be added later
  * - Captures all keyboard input (preventDefault on everything)
@@ -23,133 +23,133 @@ import { Key, KeyAction, Mods } from './types';
  */
 const KEY_MAP: Record<string, Key> = {
   // Letters
-  'KeyA': Key.A,
-  'KeyB': Key.B,
-  'KeyC': Key.C,
-  'KeyD': Key.D,
-  'KeyE': Key.E,
-  'KeyF': Key.F,
-  'KeyG': Key.G,
-  'KeyH': Key.H,
-  'KeyI': Key.I,
-  'KeyJ': Key.J,
-  'KeyK': Key.K,
-  'KeyL': Key.L,
-  'KeyM': Key.M,
-  'KeyN': Key.N,
-  'KeyO': Key.O,
-  'KeyP': Key.P,
-  'KeyQ': Key.Q,
-  'KeyR': Key.R,
-  'KeyS': Key.S,
-  'KeyT': Key.T,
-  'KeyU': Key.U,
-  'KeyV': Key.V,
-  'KeyW': Key.W,
-  'KeyX': Key.X,
-  'KeyY': Key.Y,
-  'KeyZ': Key.Z,
+  KeyA: Key.A,
+  KeyB: Key.B,
+  KeyC: Key.C,
+  KeyD: Key.D,
+  KeyE: Key.E,
+  KeyF: Key.F,
+  KeyG: Key.G,
+  KeyH: Key.H,
+  KeyI: Key.I,
+  KeyJ: Key.J,
+  KeyK: Key.K,
+  KeyL: Key.L,
+  KeyM: Key.M,
+  KeyN: Key.N,
+  KeyO: Key.O,
+  KeyP: Key.P,
+  KeyQ: Key.Q,
+  KeyR: Key.R,
+  KeyS: Key.S,
+  KeyT: Key.T,
+  KeyU: Key.U,
+  KeyV: Key.V,
+  KeyW: Key.W,
+  KeyX: Key.X,
+  KeyY: Key.Y,
+  KeyZ: Key.Z,
 
   // Numbers
-  'Digit1': Key.ONE,
-  'Digit2': Key.TWO,
-  'Digit3': Key.THREE,
-  'Digit4': Key.FOUR,
-  'Digit5': Key.FIVE,
-  'Digit6': Key.SIX,
-  'Digit7': Key.SEVEN,
-  'Digit8': Key.EIGHT,
-  'Digit9': Key.NINE,
-  'Digit0': Key.ZERO,
+  Digit1: Key.ONE,
+  Digit2: Key.TWO,
+  Digit3: Key.THREE,
+  Digit4: Key.FOUR,
+  Digit5: Key.FIVE,
+  Digit6: Key.SIX,
+  Digit7: Key.SEVEN,
+  Digit8: Key.EIGHT,
+  Digit9: Key.NINE,
+  Digit0: Key.ZERO,
 
   // Special keys
-  'Enter': Key.ENTER,
-  'Escape': Key.ESCAPE,
-  'Backspace': Key.BACKSPACE,
-  'Tab': Key.TAB,
-  'Space': Key.SPACE,
+  Enter: Key.ENTER,
+  Escape: Key.ESCAPE,
+  Backspace: Key.BACKSPACE,
+  Tab: Key.TAB,
+  Space: Key.SPACE,
 
   // Punctuation
-  'Minus': Key.MINUS,
-  'Equal': Key.EQUAL,
-  'BracketLeft': Key.BRACKET_LEFT,
-  'BracketRight': Key.BRACKET_RIGHT,
-  'Backslash': Key.BACKSLASH,
-  'Semicolon': Key.SEMICOLON,
-  'Quote': Key.QUOTE,
-  'Backquote': Key.GRAVE,
-  'Comma': Key.COMMA,
-  'Period': Key.PERIOD,
-  'Slash': Key.SLASH,
+  Minus: Key.MINUS,
+  Equal: Key.EQUAL,
+  BracketLeft: Key.BRACKET_LEFT,
+  BracketRight: Key.BRACKET_RIGHT,
+  Backslash: Key.BACKSLASH,
+  Semicolon: Key.SEMICOLON,
+  Quote: Key.QUOTE,
+  Backquote: Key.GRAVE,
+  Comma: Key.COMMA,
+  Period: Key.PERIOD,
+  Slash: Key.SLASH,
 
   // Function keys
-  'CapsLock': Key.CAPS_LOCK,
-  'F1': Key.F1,
-  'F2': Key.F2,
-  'F3': Key.F3,
-  'F4': Key.F4,
-  'F5': Key.F5,
-  'F6': Key.F6,
-  'F7': Key.F7,
-  'F8': Key.F8,
-  'F9': Key.F9,
-  'F10': Key.F10,
-  'F11': Key.F11,
-  'F12': Key.F12,
+  CapsLock: Key.CAPS_LOCK,
+  F1: Key.F1,
+  F2: Key.F2,
+  F3: Key.F3,
+  F4: Key.F4,
+  F5: Key.F5,
+  F6: Key.F6,
+  F7: Key.F7,
+  F8: Key.F8,
+  F9: Key.F9,
+  F10: Key.F10,
+  F11: Key.F11,
+  F12: Key.F12,
 
   // Special function keys
-  'PrintScreen': Key.PRINT_SCREEN,
-  'ScrollLock': Key.SCROLL_LOCK,
-  'Pause': Key.PAUSE,
-  'Insert': Key.INSERT,
-  'Home': Key.HOME,
-  'PageUp': Key.PAGE_UP,
-  'Delete': Key.DELETE,
-  'End': Key.END,
-  'PageDown': Key.PAGE_DOWN,
+  PrintScreen: Key.PRINT_SCREEN,
+  ScrollLock: Key.SCROLL_LOCK,
+  Pause: Key.PAUSE,
+  Insert: Key.INSERT,
+  Home: Key.HOME,
+  PageUp: Key.PAGE_UP,
+  Delete: Key.DELETE,
+  End: Key.END,
+  PageDown: Key.PAGE_DOWN,
 
   // Arrow keys
-  'ArrowRight': Key.RIGHT,
-  'ArrowLeft': Key.LEFT,
-  'ArrowDown': Key.DOWN,
-  'ArrowUp': Key.UP,
+  ArrowRight: Key.RIGHT,
+  ArrowLeft: Key.LEFT,
+  ArrowDown: Key.DOWN,
+  ArrowUp: Key.UP,
 
   // Keypad
-  'NumLock': Key.NUM_LOCK,
-  'NumpadDivide': Key.KP_DIVIDE,
-  'NumpadMultiply': Key.KP_MULTIPLY,
-  'NumpadSubtract': Key.KP_MINUS,
-  'NumpadAdd': Key.KP_PLUS,
-  'NumpadEnter': Key.KP_ENTER,
-  'Numpad1': Key.KP_1,
-  'Numpad2': Key.KP_2,
-  'Numpad3': Key.KP_3,
-  'Numpad4': Key.KP_4,
-  'Numpad5': Key.KP_5,
-  'Numpad6': Key.KP_6,
-  'Numpad7': Key.KP_7,
-  'Numpad8': Key.KP_8,
-  'Numpad9': Key.KP_9,
-  'Numpad0': Key.KP_0,
-  'NumpadDecimal': Key.KP_PERIOD,
+  NumLock: Key.NUM_LOCK,
+  NumpadDivide: Key.KP_DIVIDE,
+  NumpadMultiply: Key.KP_MULTIPLY,
+  NumpadSubtract: Key.KP_MINUS,
+  NumpadAdd: Key.KP_PLUS,
+  NumpadEnter: Key.KP_ENTER,
+  Numpad1: Key.KP_1,
+  Numpad2: Key.KP_2,
+  Numpad3: Key.KP_3,
+  Numpad4: Key.KP_4,
+  Numpad5: Key.KP_5,
+  Numpad6: Key.KP_6,
+  Numpad7: Key.KP_7,
+  Numpad8: Key.KP_8,
+  Numpad9: Key.KP_9,
+  Numpad0: Key.KP_0,
+  NumpadDecimal: Key.KP_PERIOD,
 
   // International
-  'IntlBackslash': Key.NON_US_BACKSLASH,
-  'ContextMenu': Key.APPLICATION,
+  IntlBackslash: Key.NON_US_BACKSLASH,
+  ContextMenu: Key.APPLICATION,
 
   // Additional function keys
-  'F13': Key.F13,
-  'F14': Key.F14,
-  'F15': Key.F15,
-  'F16': Key.F16,
-  'F17': Key.F17,
-  'F18': Key.F18,
-  'F19': Key.F19,
-  'F20': Key.F20,
-  'F21': Key.F21,
-  'F22': Key.F22,
-  'F23': Key.F23,
-  'F24': Key.F24,
+  F13: Key.F13,
+  F14: Key.F14,
+  F15: Key.F15,
+  F16: Key.F16,
+  F17: Key.F17,
+  F18: Key.F18,
+  F19: Key.F19,
+  F20: Key.F20,
+  F21: Key.F21,
+  F22: Key.F22,
+  F23: Key.F23,
+  F24: Key.F24,
 };
 
 /**
@@ -194,21 +194,23 @@ export class InputHandler {
    */
   private attach(): void {
     // Make container focusable so it can receive keyboard events (browser only)
-    if (typeof this.container.hasAttribute === 'function' && 
-        typeof this.container.setAttribute === 'function') {
+    if (
+      typeof this.container.hasAttribute === 'function' &&
+      typeof this.container.setAttribute === 'function'
+    ) {
       if (!this.container.hasAttribute('tabindex')) {
         this.container.setAttribute('tabindex', '0');
       }
-      
+
       // Add visual focus indication (only if style exists - for browser environments)
       if (this.container.style) {
         this.container.style.outline = 'none'; // Remove default outline
       }
     }
-    
+
     this.keydownListener = this.handleKeyDown.bind(this);
     this.container.addEventListener('keydown', this.keydownListener);
-    
+
     this.pasteListener = this.handlePaste.bind(this);
     this.container.addEventListener('paste', this.pasteListener);
   }
@@ -302,7 +304,7 @@ export class InputHandler {
     // Handle simple special keys that produce standard sequences
     if (mods === Mods.NONE || mods === Mods.SHIFT) {
       let simpleOutput: string | null = null;
-      
+
       switch (key) {
         case Key.ENTER:
           simpleOutput = '\r'; // Carriage return
@@ -386,7 +388,7 @@ export class InputHandler {
           simpleOutput = '\x1B[24~';
           break;
       }
-      
+
       if (simpleOutput !== null) {
         event.preventDefault();
         this.onDataCallback(simpleOutput);
@@ -402,10 +404,11 @@ export class InputHandler {
       // For letter/number keys, even with modifiers, pass the base character
       // This helps the encoder produce correct control sequences (e.g., Ctrl+A = 0x01)
       // For special keys (Enter, Arrow keys, etc.), don't pass utf8
-      const utf8 = (event.key.length === 1 && event.key.charCodeAt(0) < 128)
-        ? event.key.toLowerCase() // Use lowercase for consistency
-        : undefined;
-      
+      const utf8 =
+        event.key.length === 1 && event.key.charCodeAt(0) < 128
+          ? event.key.toLowerCase() // Use lowercase for consistency
+          : undefined;
+
       const encoded = this.encoder.encode({
         action,
         key,
@@ -456,7 +459,10 @@ export class InputHandler {
       return;
     }
 
-    console.log('[InputHandler] 📋 Pasting text:', text.substring(0, 50) + (text.length > 50 ? '...' : ''));
+    console.log(
+      '[InputHandler] 📋 Pasting text:',
+      text.substring(0, 50) + (text.length > 50 ? '...' : '')
+    );
 
     // Send the text to the terminal
     // Note: For bracketed paste mode, we would wrap this in \x1b[200~ ... \x1b[201~

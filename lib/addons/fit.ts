@@ -1,9 +1,9 @@
 /**
  * FitAddon - Auto-resize terminal to fit container
- * 
+ *
  * Provides automatic terminal resizing to fit its container element.
  * Compatible with xterm.js FitAddon API.
- * 
+ *
  * Usage:
  * ```typescript
  * const fitAddon = new FitAddon();
@@ -22,7 +22,7 @@ import type { ITerminalAddon, ITerminalCore } from '../interfaces';
 const MINIMUM_COLS = 2;
 const MINIMUM_ROWS = 1;
 const DEFAULT_SCROLLBAR_WIDTH = 15; // Reserve space for future scrollback scrollbar
-const RESIZE_DEBOUNCE_MS = 100;     // Debounce time for ResizeObserver
+const RESIZE_DEBOUNCE_MS = 100; // Debounce time for ResizeObserver
 
 // ============================================================================
 // Types
@@ -77,7 +77,7 @@ export class FitAddon implements ITerminalAddon {
 
   /**
    * Fit the terminal to its container
-   * 
+   *
    * Calculates optimal dimensions and resizes the terminal.
    * Does nothing if dimensions cannot be calculated or haven't changed.
    */
@@ -99,8 +99,10 @@ export class FitAddon implements ITerminalAddon {
 
     // Check if dimensions actually changed (prevent feedback loops)
     // Compare against BOTH proposed dimensions AND current terminal dimensions
-    if ((dims.cols === this._lastCols && dims.rows === this._lastRows) ||
-        (dims.cols === currentCols && dims.rows === currentRows)) {
+    if (
+      (dims.cols === this._lastCols && dims.rows === this._lastRows) ||
+      (dims.cols === currentCols && dims.rows === currentRows)
+    ) {
       return;
     }
 
@@ -126,13 +128,13 @@ export class FitAddon implements ITerminalAddon {
 
   /**
    * Propose dimensions to fit the terminal to its container
-   * 
+   *
    * Calculates cols and rows based on:
    * - Terminal container element dimensions (clientWidth/Height)
    * - Terminal element padding
    * - Font metrics (character cell size)
    * - Scrollbar width reservation
-   * 
+   *
    * @returns Proposed dimensions or undefined if cannot calculate
    */
   public proposeDimensions(): ITerminalDimensions | undefined {
@@ -158,14 +160,14 @@ export class FitAddon implements ITerminalAddon {
     // Get terminal element (container) dimensions
     // Use clientWidth/clientHeight to get the INSIDE dimensions (excluding padding)
     const terminalElement = this._terminal.element;
-    
+
     // Check if we have clientWidth/clientHeight (DOM element required)
     if (typeof terminalElement.clientWidth === 'undefined') {
       return undefined;
     }
-    
+
     const elementStyle = window.getComputedStyle(terminalElement);
-    
+
     // Get the actual content area (inside padding)
     const paddingTop = parseInt(elementStyle.getPropertyValue('padding-top')) || 0;
     const paddingBottom = parseInt(elementStyle.getPropertyValue('padding-bottom')) || 0;
@@ -195,11 +197,11 @@ export class FitAddon implements ITerminalAddon {
 
   /**
    * Observe the terminal's container for resize events
-   * 
+   *
    * Sets up a ResizeObserver to automatically call fit() when the
    * container size changes. Resize events are debounced to avoid
    * excessive calls during window drag operations.
-   * 
+   *
    * Call dispose() to stop observing.
    */
   public observeResize(): void {

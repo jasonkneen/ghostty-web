@@ -1,6 +1,6 @@
 /**
  * TypeScript wrapper for libghostty-vt WASM API
- * 
+ *
  * This provides a high-level, ergonomic API around the low-level C ABI
  * exports from libghostty-vt.wasm
  */
@@ -76,7 +76,7 @@ export class Ghostty {
    */
   static async load(wasmPath: string): Promise<Ghostty> {
     let wasmBytes: ArrayBuffer;
-    
+
     // Try loading as file first (for Node/Bun environments)
     try {
       const fs = await import('fs/promises');
@@ -98,11 +98,7 @@ export class Ghostty {
       env: {
         log: (ptr: number, len: number) => {
           const instance = (wasmModule as any).instance;
-          const bytes = new Uint8Array(
-            instance.exports.memory.buffer,
-            ptr,
-            len
-          );
+          const bytes = new Uint8Array(instance.exports.memory.buffer, ptr, len);
           const text = new TextDecoder().decode(bytes);
           console.log('[ghostty-wasm]', text);
         },
@@ -147,7 +143,7 @@ export class SgrParser {
     // Allocate parameter array
     const paramsPtr = this.exports.ghostty_wasm_alloc_u16_array(params.length);
     const view = new DataView(this.exports.memory.buffer);
-    
+
     // Write parameters (uint16_t array)
     for (let i = 0; i < params.length; i++) {
       view.setUint16(paramsPtr + i * 2, params[i], true);
@@ -169,7 +165,7 @@ export class SgrParser {
 
     // Iterate through attributes
     const attrPtr = this.exports.ghostty_wasm_alloc_sgr_attribute();
-    
+
     try {
       while (this.exports.ghostty_sgr_next(this.parser, attrPtr)) {
         const attr = this.readAttribute(attrPtr);
@@ -238,7 +234,7 @@ export class SgrParser {
 
       case SgrAttributeTag.FG_DEFAULT:
         return { tag: SgrAttributeTag.FG_DEFAULT };
-      
+
       case SgrAttributeTag.BG_8:
       case SgrAttributeTag.BG_16:
       case SgrAttributeTag.BG_256: {
@@ -306,18 +302,14 @@ export class KeyEncoder {
   setOption(option: KeyEncoderOption, value: boolean | number): void {
     const valuePtr = this.exports.ghostty_wasm_alloc_u8();
     const view = new DataView(this.exports.memory.buffer);
-    
+
     if (typeof value === 'boolean') {
       view.setUint8(valuePtr, value ? 1 : 0);
     } else {
       view.setUint8(valuePtr, value);
     }
 
-    const result = this.exports.ghostty_key_encoder_setopt(
-      this.encoder,
-      option,
-      valuePtr
-    );
+    const result = this.exports.ghostty_key_encoder_setopt(this.encoder, option, valuePtr);
 
     this.exports.ghostty_wasm_free_u8(valuePtr);
 
@@ -386,11 +378,7 @@ export class KeyEncoder {
 
     // Read result
     const bytesWritten = view.getUint32(writtenPtr, true);
-    const encoded = new Uint8Array(
-      this.exports.memory.buffer,
-      bufPtr,
-      bytesWritten
-    ).slice(); // Copy the data
+    const encoded = new Uint8Array(this.exports.memory.buffer, bufPtr, bytesWritten).slice(); // Copy the data
 
     // Cleanup
     this.exports.ghostty_wasm_free_u8_array(bufPtr, bufferSize);
@@ -411,22 +399,21 @@ export class KeyEncoder {
   }
 }
 
-
 /**
  * GhosttyTerminal - Wraps the WASM terminal emulator
- * 
+ *
  * Provides a TypeScript-friendly interface to Ghostty's complete
  * terminal implementation via WASM.
- * 
+ *
  * @example
  * ```typescript
  * const ghostty = await Ghostty.load('./ghostty-vt.wasm');
  * const term = ghostty.createTerminal(80, 24);
- * 
+ *
  * term.write('Hello\x1b[31m Red\x1b[0m\n');
  * const cursor = term.getCursor();
  * const cells = term.getLine(0);
- * 
+ *
  * term.free();
  * ```
  */
@@ -445,7 +432,7 @@ export class GhosttyTerminal {
 
   /**
    * Create a new terminal.
-   * 
+   *
    * @param exports WASM exports
    * @param memory WASM memory
    * @param cols Number of columns (default: 80)
@@ -483,9 +470,9 @@ export class GhosttyTerminal {
 
   /**
    * Write data to terminal (parses VT sequences and updates screen).
-   * 
+   *
    * @param data UTF-8 string or Uint8Array
-   * 
+   *
    * @example
    * ```typescript
    * term.write('Hello, World!\n');
@@ -494,8 +481,7 @@ export class GhosttyTerminal {
    * ```
    */
   write(data: string | Uint8Array): void {
-    const bytes =
-      typeof data === 'string' ? new TextEncoder().encode(data) : data;
+    const bytes = typeof data === 'string' ? new TextEncoder().encode(data) : data;
 
     if (bytes.length === 0) return;
 
@@ -513,7 +499,7 @@ export class GhosttyTerminal {
 
   /**
    * Resize the terminal.
-   * 
+   *
    * @param cols New column count
    * @param rows New row count
    */
@@ -561,10 +547,10 @@ export class GhosttyTerminal {
 
   /**
    * Get a line of cells from the visible screen.
-   * 
+   *
    * @param y Line number (0 = top visible line)
    * @returns Array of cells, or null if y is out of bounds
-   * 
+   *
    * @example
    * ```typescript
    * const cells = term.getLine(0);
@@ -587,12 +573,7 @@ export class GhosttyTerminal {
 
     try {
       // Get line from WASM
-      const count = this.exports.ghostty_terminal_get_line(
-        this.handle,
-        y,
-        ptr,
-        this._cols
-      );
+      const count = this.exports.ghostty_terminal_get_line(this.handle, y, ptr, this._cols);
 
       if (count < 0) return null;
 
@@ -623,7 +604,7 @@ export class GhosttyTerminal {
 
   /**
    * Get a line from scrollback history.
-   * 
+   *
    * @param offset Line offset from top of scrollback (0 = oldest line)
    * @returns Array of cells, or null if not available
    */
@@ -693,7 +674,7 @@ export class GhosttyTerminal {
 
   /**
    * Get all visible lines at once (convenience method).
-   * 
+   *
    * @returns Array of line arrays, or empty array on error
    */
   getAllLines(): GhosttyCell[][] {
@@ -709,7 +690,7 @@ export class GhosttyTerminal {
 
   /**
    * Get only the dirty lines (for optimized rendering).
-   * 
+   *
    * @returns Map of row number to cell array
    */
   getDirtyLines(): Map<number, GhosttyCell[]> {

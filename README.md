@@ -7,6 +7,7 @@ A terminal emulator that integrates [Ghostty's](https://github.com/ghostty-org/g
 This repository provides a **foundation for building web-based terminals** using Ghostty's production-tested VT100 parser compiled to WebAssembly.
 
 **What's implemented:**
+
 - ✅ Full terminal emulator with screen buffer, VT parser, canvas renderer
 - ✅ TypeScript wrapper for libghostty-vt WASM API
 - ✅ SGR parser (ANSI colors, 256-color, RGB true color)
@@ -36,6 +37,7 @@ bun run dev
 ```
 
 This provides a **real persistent shell session**! You can:
+
 - Use `cd` and it persists between commands
 - Run interactive programs like `vim`, `nano`, `top`, `htop`
 - Use tab completion and command history (↑/↓)
@@ -45,12 +47,14 @@ This provides a **real persistent shell session**! You can:
 **Alternative: Command-by-Command Mode**
 
 For the original file browser (executes each command separately):
+
 ```bash
 cd demo/server
 bun run file-browser
 ```
 
 **Remote Access:** If you're accessing via a forwarded hostname (e.g., `mux.coder`), make sure to forward both ports:
+
 - Port 8000 (web server - Vite)
 - Port 3001 (WebSocket server)
 
@@ -81,7 +85,7 @@ const term = new Terminal({
   theme: {
     background: '#1e1e1e',
     foreground: '#d4d4d4',
-  }
+  },
 });
 
 // Add FitAddon for responsive sizing
@@ -97,7 +101,7 @@ term.write('Hello, World!\r\n');
 term.write('\x1b[1;32mGreen bold text\x1b[0m\r\n');
 
 // Handle user input
-term.onData(data => {
+term.onData((data) => {
   console.log('User typed:', data);
   // Send to backend, echo, etc.
 });
@@ -109,7 +113,7 @@ term.onData(data => {
 const ws = new WebSocket('ws://localhost:3001/ws');
 
 // Send user input to backend
-term.onData(data => {
+term.onData((data) => {
   ws.send(JSON.stringify({ type: 'input', data }));
 });
 
@@ -127,6 +131,7 @@ ws.onmessage = (event) => {
 **DON'T** re-implement VT100 parsing from scratch (years of work, thousands of edge cases).
 
 **DO** use Ghostty's proven parser:
+
 - ✅ Battle-tested by thousands of users
 - ✅ Handles all VT100/ANSI quirks correctly
 - ✅ Modern features (RGB colors, Kitty keyboard protocol)
@@ -195,6 +200,7 @@ WebSocket Server (server/file-browser-server.ts)
 ## Building
 
 Requires:
+
 - **Zig 0.15.2+** (to build WASM)
 - **Ghostty source** (from GitHub)
 
@@ -227,6 +233,7 @@ bun run build           # Build distribution
 ```
 
 **Test Coverage:**
+
 - ✅ ScreenBuffer (63 tests, 163 assertions)
 - ✅ VTParser (45 tests)
 - ✅ CanvasRenderer (11 tests)

@@ -1,6 +1,6 @@
 /**
  * Public API for @cmux/ghostty-terminal
- * 
+ *
  * Main entry point following xterm.js conventions
  */
 
@@ -8,28 +8,28 @@
 export { Terminal } from './terminal';
 
 // xterm.js-compatible interfaces
-export type { 
-  ITerminalOptions, 
-  ITheme, 
+export type {
+  ITerminalOptions,
+  ITheme,
   ITerminalAddon,
   ITerminalCore,
   IDisposable,
-  IEvent
+  IEvent,
 } from './interfaces';
 
 // Ghostty WASM components (for advanced usage)
 export { Ghostty, GhosttyTerminal, SgrParser, KeyEncoder, CellFlags } from './ghostty';
-export type { 
-  SgrAttribute, 
-  SgrAttributeTag, 
-  KeyEvent, 
-  KeyAction, 
-  Key, 
+export type {
+  SgrAttribute,
+  SgrAttributeTag,
+  KeyEvent,
+  KeyAction,
+  Key,
   Mods,
   GhosttyCell,
   RGB,
   Cursor,
-  TerminalHandle
+  TerminalHandle,
 } from './types';
 
 // Low-level components (for custom integrations)

@@ -1,6 +1,6 @@
 /**
  * Canvas Renderer for Terminal Display
- * 
+ *
  * High-performance canvas-based renderer that draws the terminal using
  * Ghostty's WASM terminal emulator. Features:
  * - Font metrics measurement with DPI scaling
@@ -29,18 +29,18 @@ export interface IRenderable {
 // ============================================================================
 
 export interface RendererOptions {
-  fontSize?: number;           // Default: 15
-  fontFamily?: string;         // Default: 'monospace'
-  cursorStyle?: 'block' | 'underline' | 'bar';  // Default: 'block'
-  cursorBlink?: boolean;       // Default: false
+  fontSize?: number; // Default: 15
+  fontFamily?: string; // Default: 'monospace'
+  cursorStyle?: 'block' | 'underline' | 'bar'; // Default: 'block'
+  cursorBlink?: boolean; // Default: false
   theme?: ITheme;
-  devicePixelRatio?: number;   // Default: window.devicePixelRatio
+  devicePixelRatio?: number; // Default: window.devicePixelRatio
 }
 
 export interface FontMetrics {
-  width: number;               // Character cell width in CSS pixels
-  height: number;              // Character cell height in CSS pixels
-  baseline: number;            // Distance from top to text baseline
+  width: number; // Character cell width in CSS pixels
+  height: number; // Character cell height in CSS pixels
+  baseline: number; // Distance from top to text baseline
 }
 
 // ============================================================================
@@ -87,15 +87,15 @@ export class CanvasRenderer {
   private devicePixelRatio: number;
   private metrics: FontMetrics;
   private palette: string[];
-  
+
   // Cursor blinking state
   private cursorVisible: boolean = true;
   private cursorBlinkInterval?: number;
   private lastCursorPosition: { x: number; y: number } = { x: 0, y: 0 };
-  
+
   // Selection manager (for rendering selection overlay)
   private selectionManager?: SelectionManager;
-  
+
   constructor(canvas: HTMLCanvasElement, options: RendererOptions = {}) {
     this.canvas = canvas;
     const ctx = canvas.getContext('2d', { alpha: false });
@@ -103,7 +103,7 @@ export class CanvasRenderer {
       throw new Error('Failed to get 2D rendering context');
     }
     this.ctx = ctx;
-    
+
     // Apply options
     this.fontSize = options.fontSize ?? 15;
     this.fontFamily = options.fontFamily ?? 'monospace';
@@ -111,7 +111,7 @@ export class CanvasRenderer {
     this.cursorBlink = options.cursorBlink ?? false;
     this.theme = { ...DEFAULT_THEME, ...options.theme };
     this.devicePixelRatio = options.devicePixelRatio ?? window.devicePixelRatio ?? 1;
-    
+
     // Build color palette (16 ANSI colors)
     this.palette = [
       this.theme.black,
@@ -131,112 +131,114 @@ export class CanvasRenderer {
       this.theme.brightCyan,
       this.theme.brightWhite,
     ];
-    
+
     // Measure font metrics
     this.metrics = this.measureFont();
-    
+
     // Setup cursor blinking if enabled
     if (this.cursorBlink) {
       this.startCursorBlink();
     }
   }
-  
+
   // ==========================================================================
   // Font Metrics Measurement
   // ==========================================================================
-  
+
   private measureFont(): FontMetrics {
     // Use an offscreen canvas for measurement
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d')!;
-    
+
     // Set font (use actual pixel size for accurate measurement)
     ctx.font = `${this.fontSize}px ${this.fontFamily}`;
-    
+
     // Measure width using 'M' (typically widest character)
     const widthMetrics = ctx.measureText('M');
     const width = Math.ceil(widthMetrics.width);
-    
+
     // Measure height using ascent + descent with padding for glyph overflow
     const ascent = widthMetrics.actualBoundingBoxAscent || this.fontSize * 0.8;
     const descent = widthMetrics.actualBoundingBoxDescent || this.fontSize * 0.2;
-    
+
     // Add 2px padding to height to account for glyphs that overflow (like 'f', 'd', 'g', 'p')
     // and anti-aliasing pixels
     const height = Math.ceil(ascent + descent) + 2;
     const baseline = Math.ceil(ascent) + 1; // Offset baseline by half the padding
-    
+
     return { width, height, baseline };
   }
-  
+
   /**
    * Remeasure font metrics (call after font loads or changes)
    */
   public remeasureFont(): void {
     this.metrics = this.measureFont();
   }
-  
+
   // ==========================================================================
   // Color Conversion
   // ==========================================================================
-  
+
   private rgbToCSS(r: number, g: number, b: number): string {
     return `rgb(${r}, ${g}, ${b})`;
   }
-  
+
   // ==========================================================================
   // Canvas Sizing
   // ==========================================================================
-  
+
   /**
    * Resize canvas to fit terminal dimensions
    */
   public resize(cols: number, rows: number): void {
     const cssWidth = cols * this.metrics.width;
     const cssHeight = rows * this.metrics.height;
-    
+
     // Set CSS size (what user sees)
     this.canvas.style.width = `${cssWidth}px`;
     this.canvas.style.height = `${cssHeight}px`;
-    
+
     // Set actual canvas size (scaled for DPI)
     this.canvas.width = cssWidth * this.devicePixelRatio;
     this.canvas.height = cssHeight * this.devicePixelRatio;
-    
+
     // Scale context to match DPI (setting canvas.width/height resets the context)
     this.ctx.scale(this.devicePixelRatio, this.devicePixelRatio);
-    
+
     // Set text rendering properties for crisp text
     this.ctx.textBaseline = 'alphabetic';
     this.ctx.textAlign = 'left';
-    
+
     // Fill background after resize
     this.ctx.fillStyle = this.theme.background;
     this.ctx.fillRect(0, 0, cssWidth, cssHeight);
   }
-  
+
   // ==========================================================================
   // Main Rendering
   // ==========================================================================
-  
+
   /**
    * Render the terminal buffer to canvas
    */
   public render(buffer: IRenderable, forceAll: boolean = false): void {
     const cursor = buffer.getCursor();
     const dims = buffer.getDimensions();
-    
+
     // Resize canvas if dimensions changed
-    const needsResize = this.canvas.width !== dims.cols * this.metrics.width * this.devicePixelRatio ||
-                        this.canvas.height !== dims.rows * this.metrics.height * this.devicePixelRatio;
-    
+    const needsResize =
+      this.canvas.width !== dims.cols * this.metrics.width * this.devicePixelRatio ||
+      this.canvas.height !== dims.rows * this.metrics.height * this.devicePixelRatio;
+
     if (needsResize) {
       this.resize(dims.cols, dims.rows);
       forceAll = true; // Force full render after resize
     }
-    
+
     // Check if cursor position changed or if blinking (need to redraw cursor line)
-    const cursorMoved = cursor.x !== this.lastCursorPosition.x || cursor.y !== this.lastCursorPosition.y;
+    const cursorMoved =
+      cursor.x !== this.lastCursorPosition.x || cursor.y !== this.lastCursorPosition.y;
     if (cursorMoved || this.cursorBlink) {
       // Mark cursor lines as needing redraw
       if (!forceAll && !buffer.isRowDirty(cursor.y)) {
@@ -256,13 +258,14 @@ export class CanvasRenderer {
         }
       }
     }
-    
+
     // Check if we need to redraw selection-related lines
     // Only force redraws when actively selecting or clearing selection
     const hasSelection = this.selectionManager && this.selectionManager.hasSelection();
-    const isActivelySelecting = this.selectionManager && this.selectionManager.isActivelySelecting();
+    const isActivelySelecting =
+      this.selectionManager && this.selectionManager.isActivelySelecting();
     const selectionRows = new Set<number>();
-    
+
     // Mark selection rows for redraw ONLY when actively selecting (mouse is down)
     // This prevents slowdown when just typing with a static selection
     if (hasSelection && isActivelySelecting) {
@@ -273,7 +276,7 @@ export class CanvasRenderer {
         }
       }
     }
-    
+
     // Always mark previous selection rows for redraw (to clear old overlay)
     if (this.selectionManager) {
       const prevCoords = this.selectionManager.getPreviousSelectionCoords();
@@ -285,70 +288,70 @@ export class CanvasRenderer {
         this.selectionManager.clearPreviousSelection();
       }
     }
-    
+
     // Track if anything was actually rendered
     let anyLinesRendered = false;
-    
+
     // Render each line
     for (let y = 0; y < dims.rows; y++) {
       // Render if forcing all, or if dirty, or if it has selection
       const needsRender = forceAll || buffer.isRowDirty(y) || selectionRows.has(y);
-      
+
       if (!needsRender) {
         continue;
       }
-      
+
       anyLinesRendered = true;
       const line = buffer.getLine(y);
       if (line) {
         this.renderLine(line, y, dims.cols);
       }
     }
-    
+
     // Render selection highlight AFTER all text (so it overlays)
     // Only render if we actually rendered some lines
     if (hasSelection && anyLinesRendered) {
       // Draw selection overlay - only when we've redrawn the underlying text
       this.renderSelection(dims.cols);
     }
-    
+
     // Render cursor
     if (cursor.visible && this.cursorVisible) {
       this.renderCursor(cursor.x, cursor.y);
     }
-    
+
     // Update last cursor position
     this.lastCursorPosition = { x: cursor.x, y: cursor.y };
-    
+
     // Clear dirty flags after rendering
     if (!forceAll) {
       buffer.clearDirty();
     }
   }
-  
+
   /**
    * Render a single line
    */
   private renderLine(line: GhosttyCell[], y: number, cols: number): void {
     const lineY = y * this.metrics.height;
-    
+
     // Clear line background
     this.ctx.fillStyle = this.theme.background;
     this.ctx.fillRect(0, lineY, cols * this.metrics.width, this.metrics.height);
-    
+
     // Render each cell
     for (let x = 0; x < line.length; x++) {
       const cell = line[x];
-      
+
       // Skip padding cells for wide characters
       if (cell.width === 0) {
         continue;
       }
-      
+
       this.renderCell(cell, x, y);
     }
   }
-  
+
   /**
    * Render a single cell
    */
@@ -356,49 +359,53 @@ export class CanvasRenderer {
     const cellX = x * this.metrics.width;
     const cellY = y * this.metrics.height;
     const cellWidth = this.metrics.width * cell.width; // Handle wide chars (width=2)
-    
+
     // Extract colors and handle inverse
-    let fg_r = cell.fg_r, fg_g = cell.fg_g, fg_b = cell.fg_b;
-    let bg_r = cell.bg_r, bg_g = cell.bg_g, bg_b = cell.bg_b;
-    
+    let fg_r = cell.fg_r,
+      fg_g = cell.fg_g,
+      fg_b = cell.fg_b;
+    let bg_r = cell.bg_r,
+      bg_g = cell.bg_g,
+      bg_b = cell.bg_b;
+
     if (cell.flags & CellFlags.INVERSE) {
       [fg_r, fg_g, fg_b, bg_r, bg_g, bg_b] = [bg_r, bg_g, bg_b, fg_r, fg_g, fg_b];
     }
-    
+
     // Always draw background to clear previous character
     this.ctx.fillStyle = this.rgbToCSS(bg_r, bg_g, bg_b);
     this.ctx.fillRect(cellX, cellY, cellWidth, this.metrics.height);
-    
+
     // Skip rendering if invisible
     if (cell.flags & CellFlags.INVISIBLE) {
       return;
     }
-    
+
     // Set text style
     let fontStyle = '';
     if (cell.flags & CellFlags.ITALIC) fontStyle += 'italic ';
     if (cell.flags & CellFlags.BOLD) fontStyle += 'bold ';
     this.ctx.font = `${fontStyle}${this.fontSize}px ${this.fontFamily}`;
-    
+
     // Set text color
     this.ctx.fillStyle = this.rgbToCSS(fg_r, fg_g, fg_b);
-    
+
     // Apply faint effect
     if (cell.flags & CellFlags.FAINT) {
       this.ctx.globalAlpha = 0.5;
     }
-    
+
     // Draw text
     const textX = cellX;
     const textY = cellY + this.metrics.baseline;
     const char = String.fromCodePoint(cell.codepoint || 32); // Default to space if null
     this.ctx.fillText(char, textX, textY);
-    
+
     // Reset alpha
     if (cell.flags & CellFlags.FAINT) {
       this.ctx.globalAlpha = 1.0;
     }
-    
+
     // Draw underline
     if (cell.flags & CellFlags.UNDERLINE) {
       const underlineY = cellY + this.metrics.baseline + 2;
@@ -409,7 +416,7 @@ export class CanvasRenderer {
       this.ctx.lineTo(cellX + cellWidth, underlineY);
       this.ctx.stroke();
     }
-    
+
     // Draw strikethrough
     if (cell.flags & CellFlags.STRIKETHROUGH) {
       const strikeY = cellY + this.metrics.height / 2;
@@ -421,22 +428,22 @@ export class CanvasRenderer {
       this.ctx.stroke();
     }
   }
-  
+
   /**
    * Render cursor
    */
   private renderCursor(x: number, y: number): void {
     const cursorX = x * this.metrics.width;
     const cursorY = y * this.metrics.height;
-    
+
     this.ctx.fillStyle = this.theme.cursor;
-    
+
     switch (this.cursorStyle) {
       case 'block':
         // Full cell block
         this.ctx.fillRect(cursorX, cursorY, this.metrics.width, this.metrics.height);
         break;
-      
+
       case 'underline':
         // Underline at bottom of cell
         const underlineHeight = Math.max(2, Math.floor(this.metrics.height * 0.15));
@@ -447,7 +454,7 @@ export class CanvasRenderer {
           underlineHeight
         );
         break;
-      
+
       case 'bar':
         // Vertical bar at left of cell
         const barWidth = Math.max(2, Math.floor(this.metrics.width * 0.15));
@@ -455,11 +462,11 @@ export class CanvasRenderer {
         break;
     }
   }
-  
+
   // ==========================================================================
   // Cursor Blinking
   // ==========================================================================
-  
+
   private startCursorBlink(): void {
     // xterm.js uses ~530ms blink interval
     this.cursorBlinkInterval = window.setInterval(() => {
@@ -467,7 +474,7 @@ export class CanvasRenderer {
       // Note: Render loop should redraw cursor line automatically
     }, 530);
   }
-  
+
   private stopCursorBlink(): void {
     if (this.cursorBlinkInterval !== undefined) {
       clearInterval(this.cursorBlinkInterval);
@@ -475,17 +482,17 @@ export class CanvasRenderer {
     }
     this.cursorVisible = true;
   }
-  
+
   // ==========================================================================
   // Public API
   // ==========================================================================
-  
+
   /**
    * Update theme colors
    */
   public setTheme(theme: ITheme): void {
     this.theme = { ...DEFAULT_THEME, ...theme };
-    
+
     // Rebuild palette
     this.palette = [
       this.theme.black,
@@ -506,7 +513,7 @@ export class CanvasRenderer {
       this.theme.brightWhite,
     ];
   }
-  
+
   /**
    * Update font size
    */
@@ -514,7 +521,7 @@ export class CanvasRenderer {
     this.fontSize = size;
     this.metrics = this.measureFont();
   }
-  
+
   /**
    * Update font family
    */
@@ -522,14 +529,14 @@ export class CanvasRenderer {
     this.fontFamily = family;
     this.metrics = this.measureFont();
   }
-  
+
   /**
    * Update cursor style
    */
   public setCursorStyle(style: 'block' | 'underline' | 'bar'): void {
     this.cursorStyle = style;
   }
-  
+
   /**
    * Enable/disable cursor blinking
    */
@@ -542,28 +549,28 @@ export class CanvasRenderer {
       this.stopCursorBlink();
     }
   }
-  
+
   /**
    * Get current font metrics
    */
   public getMetrics(): FontMetrics {
     return { ...this.metrics };
   }
-  
+
   /**
    * Get canvas element (needed by SelectionManager)
    */
   public getCanvas(): HTMLCanvasElement {
     return this.canvas;
   }
-  
+
   /**
    * Set selection manager (for rendering selection overlay)
    */
   public setSelectionManager(manager: SelectionManager): void {
     this.selectionManager = manager;
   }
-  
+
   /**
    * Clear entire canvas
    */
@@ -571,36 +578,36 @@ export class CanvasRenderer {
     this.ctx.fillStyle = this.theme.background;
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
   }
-  
+
   /**
    * Render selection overlay
    */
   private renderSelection(cols: number): void {
     const coords = this.selectionManager!.getSelectionCoords();
     if (!coords) return;
-    
+
     const { startCol, startRow, endCol, endRow } = coords;
-    
+
     // Use semi-transparent fill for selection
     this.ctx.save();
     this.ctx.fillStyle = this.theme.selectionBackground;
     this.ctx.globalAlpha = 0.5; // Make it semi-transparent so text is visible
-    
+
     for (let row = startRow; row <= endRow; row++) {
-      const colStart = (row === startRow) ? startCol : 0;
-      const colEnd = (row === endRow) ? endCol : cols - 1;
-      
+      const colStart = row === startRow ? startCol : 0;
+      const colEnd = row === endRow ? endCol : cols - 1;
+
       const x = colStart * this.metrics.width;
       const y = row * this.metrics.height;
       const width = (colEnd - colStart + 1) * this.metrics.width;
       const height = this.metrics.height;
-      
+
       this.ctx.fillRect(x, y, width, height);
     }
-    
+
     this.ctx.restore();
   }
-  
+
   /**
    * Cleanup resources
    */

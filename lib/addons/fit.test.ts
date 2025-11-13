@@ -1,6 +1,6 @@
 /**
  * Comprehensive test suite for FitAddon
- * 
+ *
  * Note: Most FitAddon tests require DOM APIs (document, window, getComputedStyle).
  * These tests focus on basic functionality that doesn't require DOM.
  * For full integration tests, see examples/terminal-demo.html
@@ -18,7 +18,7 @@ class MockTerminal {
   public cols = 80;
   public rows = 24;
   public renderer = {
-    getMetrics: () => ({ width: 9, height: 16, baseline: 12 })
+    getMetrics: () => ({ width: 9, height: 16, baseline: 12 }),
   };
 
   public resize(cols: number, rows: number): void {
@@ -109,7 +109,7 @@ describe('FitAddon', () => {
   });
 
   // ==========================================================================
-  // Integration Tests  
+  // Integration Tests
   // ==========================================================================
 
   test('full workflow: activate → fit → observeResize → dispose', () => {

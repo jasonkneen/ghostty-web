@@ -3,16 +3,16 @@
  */
 
 export interface ITerminalOptions {
-  cols?: number;                    // Default: 80
-  rows?: number;                    // Default: 24
-  cursorBlink?: boolean;            // Default: false
+  cols?: number; // Default: 80
+  rows?: number; // Default: 24
+  cursorBlink?: boolean; // Default: false
   cursorStyle?: 'block' | 'underline' | 'bar';
   theme?: ITheme;
-  scrollback?: number;              // Default: 1000
-  fontSize?: number;                // Default: 15
-  fontFamily?: string;              // Default: 'monospace'
+  scrollback?: number; // Default: 1000
+  fontSize?: number; // Default: 15
+  fontFamily?: string; // Default: 'monospace'
   allowTransparency?: boolean;
-  wasmPath?: string;                // Default: '../ghostty-vt.wasm' (relative to examples/)
+  wasmPath?: string; // Default: '../ghostty-vt.wasm' (relative to examples/)
 }
 
 export interface ITheme {
@@ -22,7 +22,7 @@ export interface ITheme {
   cursorAccent?: string;
   selectionBackground?: string;
   selectionForeground?: string;
-  
+
   // ANSI colors (0-15)
   black?: string;
   red?: string;
