@@ -29,10 +29,10 @@ index 4f8fef88e..ca9fb1d4d 100644
  #include <ghostty/vt/key.h>
 diff --git a/include/ghostty/vt/terminal.h b/include/ghostty/vt/terminal.h
 new file mode 100644
-index 000000000..dd7d1ee6b
+index 000000000..078a0b872
 --- /dev/null
 +++ b/include/ghostty/vt/terminal.h
-@@ -0,0 +1,418 @@
+@@ -0,0 +1,486 @@
 +/**
 + * @file terminal.h
 + *
@@ -444,6 +444,74 @@ index 000000000..dd7d1ee6b
 +    size_t buffer_size
 +);
 +
++
++/* ============================================================================
++ * Terminal Modes
++ * ========================================================================= */
++
++/**
++ * Query terminal mode state.
++ *
++ * This function queries whether a specific terminal mode is enabled or disabled.
++ * Modes can be either ANSI modes or DEC private modes (indicated by is_ansi parameter).
++ *
++ * Common DEC modes (is_ansi = false):
++ * - 25   = Cursor visible (DECTCEM)
++ * - 1000 = Mouse tracking (normal)
++ * - 1002 = Mouse tracking (button events)
++ * - 1003 = Mouse tracking (any events)
++ * - 1004 = Focus event reporting
++ * - 1047 = Alternate screen buffer
++ * - 1049 = Alternate screen buffer with cursor save
++ * - 2004 = Bracketed paste mode
++ *
++ * Common ANSI modes (is_ansi = true):
++ * - 4 = Insert/replace mode (IRM)
++ *
++ * @param term Terminal instance
++ * @param mode_number Mode number to query
++ * @param is_ansi true for ANSI modes, false for DEC private modes
++ * @return true if mode is enabled, false if disabled or mode is invalid
++ */
++bool ghostty_terminal_get_mode(GhosttyTerminal term, int mode_number, bool is_ansi);
++
++/**
++ * Check if bracketed paste mode is enabled (DEC mode 2004).
++ *
++ * Bracketed paste wraps pasted text with escape sequences to distinguish
++ * it from typed text: ESC[200~ ... ESC[201~
++ *
++ * @param term Terminal instance
++ * @return true if bracketed paste is enabled
++ */
++bool ghostty_terminal_has_bracketed_paste(GhosttyTerminal term);
++
++/**
++ * Check if focus event reporting is enabled (DEC mode 1004).
++ *
++ * When enabled, the terminal reports focus in/out events:
++ * - Focus in:  ESC[I
++ * - Focus out: ESC[O
++ *
++ * @param term Terminal instance
++ * @return true if focus events are enabled
++ */
++bool ghostty_terminal_has_focus_events(GhosttyTerminal term);
++
++/**
++ * Check if any mouse tracking mode is enabled.
++ *
++ * Returns true if any of these DEC modes are enabled:
++ * - 1000: Normal mouse tracking
++ * - 1002: Button event tracking
++ * - 1003: Any event tracking
++ *
++ * @param term Terminal instance
++ * @return true if mouse tracking is enabled
++ */
++bool ghostty_terminal_has_mouse_tracking(GhosttyTerminal term);
++
++
 +#ifdef __cplusplus
 +}
 +#endif
@@ -452,10 +520,10 @@ index 000000000..dd7d1ee6b
 +
 +#endif /* GHOSTTY_VT_TERMINAL_H */
 diff --git a/src/lib_vt.zig b/src/lib_vt.zig
-index e95eee5f4..1ac0672e4 100644
+index e95eee5f4..687ccc6a3 100644
 --- a/src/lib_vt.zig
 +++ b/src/lib_vt.zig
-@@ -137,6 +137,25 @@ comptime {
+@@ -137,6 +137,29 @@ comptime {
          @export(&c.sgr_unknown_partial, .{ .name = "ghostty_sgr_unknown_partial" });
          @export(&c.sgr_attribute_tag, .{ .name = "ghostty_sgr_attribute_tag" });
          @export(&c.sgr_attribute_value, .{ .name = "ghostty_sgr_attribute_value" });
@@ -478,11 +546,15 @@ index e95eee5f4..1ac0672e4 100644
 +        @export(&c.terminal_is_row_dirty, .{ .name = "ghostty_terminal_is_row_dirty" });
 +        @export(&c.terminal_clear_dirty, .{ .name = "ghostty_terminal_clear_dirty" });
 +        @export(&c.terminal_get_hyperlink_uri, .{ .name = "ghostty_terminal_get_hyperlink_uri" });
++        @export(&c.terminal_get_mode, .{ .name = "ghostty_terminal_get_mode" });
++        @export(&c.terminal_has_bracketed_paste, .{ .name = "ghostty_terminal_has_bracketed_paste" });
++        @export(&c.terminal_has_focus_events, .{ .name = "ghostty_terminal_has_focus_events" });
++        @export(&c.terminal_has_mouse_tracking, .{ .name = "ghostty_terminal_has_mouse_tracking" });
  
          // On Wasm we need to export our allocator convenience functions.
          if (builtin.target.cpu.arch.isWasm()) {
 diff --git a/src/terminal/c/main.zig b/src/terminal/c/main.zig
-index bc92597f5..1b3cc92a5 100644
+index bc92597f5..d988967f7 100644
 --- a/src/terminal/c/main.zig
 +++ b/src/terminal/c/main.zig
 @@ -4,6 +4,7 @@ pub const key_event = @import("key_event.zig");
@@ -493,7 +565,7 @@ index bc92597f5..1b3cc92a5 100644
  
  // The full C API, unexported.
  pub const osc_new = osc.new;
-@@ -52,6 +53,26 @@ pub const key_encoder_encode = key_encode.encode;
+@@ -52,6 +53,30 @@ pub const key_encoder_encode = key_encode.encode;
  
  pub const paste_is_safe = paste.is_safe;
  
@@ -516,11 +588,15 @@ index bc92597f5..1b3cc92a5 100644
 +pub const terminal_is_row_dirty = terminal.isRowDirty;
 +pub const terminal_clear_dirty = terminal.clearDirty;
 +pub const terminal_get_hyperlink_uri = terminal.getHyperlinkUri;
++pub const terminal_get_mode = terminal.getMode;
++pub const terminal_has_bracketed_paste = terminal.hasBracketedPaste;
++pub const terminal_has_focus_events = terminal.hasFocusEvents;
++pub const terminal_has_mouse_tracking = terminal.hasMouseTracking;
 +
  test {
      _ = color;
      _ = osc;
-@@ -59,6 +80,7 @@ test {
+@@ -59,6 +84,7 @@ test {
      _ = key_encode;
      _ = paste;
      _ = sgr;
@@ -530,10 +606,10 @@ index bc92597f5..1b3cc92a5 100644
      _ = @import("../../lib/allocator.zig");
 diff --git a/src/terminal/c/terminal.zig b/src/terminal/c/terminal.zig
 new file mode 100644
-index 000000000..7693111c6
+index 000000000..c39b0791c
 --- /dev/null
 +++ b/src/terminal/c/terminal.zig
-@@ -0,0 +1,578 @@
+@@ -0,0 +1,604 @@
 +//! C API wrapper for Terminal
 +//!
 +//! This provides a C-compatible interface to Ghostty's Terminal for WASM export.
@@ -552,6 +628,7 @@ index 000000000..7693111c6
 +const color = @import("../color.zig");
 +const point = @import("../point.zig");
 +const style = @import("../style.zig");
++const modespkg = @import("../modes.zig");
 +
 +const log = std.log.scoped(.terminal_c);
 +
@@ -949,11 +1026,11 @@ index 000000000..7693111c6
 +    const wrapper: *const TerminalWrapper = @ptrCast(@alignCast(ptr orelse return -1));
 +
 +    const y_usize: usize = @intCast(y);
-+    
++
 +    // Get scrollback length to validate bounds
 +    const active_pin = wrapper.terminal.screen.pages.getTopLeft(.active);
 +    const screen_pin = wrapper.terminal.screen.pages.getTopLeft(.screen);
-+    
++
 +    // Count total scrollback rows
 +    var scrollback_len: usize = 0;
 +    var pin = screen_pin;
@@ -962,13 +1039,13 @@ index 000000000..7693111c6
 +        pin = pin.down(1) orelse break;
 +        if (scrollback_len > 100000) return -1; // Safety limit
 +    }
-+    
++
 +    // Validate y is within scrollback bounds
 +    if (y_usize >= scrollback_len) return -1;
-+    
++
 +    const cols = wrapper.terminal.cols;
 +    if (buffer_size < cols) return -1;
-+    
++
 +    // Get cells from scrollback using screen coordinates
 +    // Screen coordinates: y=0 is the oldest line in scrollback, increasing toward active area
 +    var x: usize = 0;
@@ -977,12 +1054,12 @@ index 000000000..7693111c6
 +            .x = @intCast(x),
 +            .y = @intCast(y_usize),
 +        } };
-+        
++
 +        const list_cell = wrapper.terminal.screen.pages.getCell(pt);
 +        const cell = if (list_cell) |lc| lc.cell.* else Cell{};
 +        out_buffer[x] = convertCell(wrapper, cell, list_cell);
 +    }
-+    
++
 +    return @intCast(cols);
 +}
 +
@@ -1024,23 +1101,23 @@ index 000000000..7693111c6
 +    buffer_size: usize,
 +) callconv(.c) c_int {
 +    const wrapper: *const TerminalWrapper = @ptrCast(@alignCast(ptr orelse return 0));
-+    
++
 +    // Hyperlink ID 0 means no link
 +    if (hyperlink_id == 0) return 0;
-+    
++
 +    // Get the current page
 +    const page = &wrapper.terminal.screen.cursor.page_pin.node.data;
-+    
++
 +    // Look up hyperlink in the set
 +    const hyperlink_entry = page.hyperlink_set.get(page.memory, hyperlink_id);
-+    
-+    // Get URI string from page memory  
++
++    // Get URI string from page memory
 +    const uri = hyperlink_entry.uri.offset.ptr(page.memory)[0..hyperlink_entry.uri.len];
-+    
++
 +    // Copy to output buffer (truncate if necessary)
 +    const copy_len = @min(uri.len, buffer_size);
 +    @memcpy(out_buffer[0..copy_len], uri[0..copy_len]);
-+    
++
 +    return @intCast(copy_len);
 +}
 +
@@ -1111,4 +1188,29 @@ index 000000000..7693111c6
 +    write(term, data.ptr, data.len);
 +    try std.testing.expect(isDirty(term));
 +    try std.testing.expect(isRowDirty(term, 0));
++}
++
++// ============================================================================
++// Terminal Modes
++// ============================================================================
++
++pub fn getMode(ptr: ?*anyopaque, mode_number: c_int, is_ansi: bool) callconv(.c) bool {
++    const wrapper: *const TerminalWrapper = @ptrCast(@alignCast(ptr orelse return false));
++    const mode = modespkg.modeFromInt(@intCast(mode_number), is_ansi) orelse return false;
++    return wrapper.terminal.modes.get(mode);
++}
++
++pub fn hasBracketedPaste(ptr: ?*anyopaque) callconv(.c) bool {
++    return getMode(ptr, 2004, false);
++}
++
++pub fn hasFocusEvents(ptr: ?*anyopaque) callconv(.c) bool {
++    return getMode(ptr, 1004, false);
++}
++
++pub fn hasMouseTracking(ptr: ?*anyopaque) callconv(.c) bool {
++    const wrapper: *const TerminalWrapper = @ptrCast(@alignCast(ptr orelse return false));
++    return wrapper.terminal.modes.get(.mouse_event_normal) or
++           wrapper.terminal.modes.get(.mouse_event_button) or
++           wrapper.terminal.modes.get(.mouse_event_any);
 +}

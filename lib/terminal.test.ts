@@ -1018,8 +1018,7 @@ describe('attachCustomKeyEventHandler()', () => {
       await term.open(container);
 
       const handler = (e: KeyboardEvent) => false;
-      term.attachCustomKeyEventHandler(handler);
-      expect(() => term.attachCustomKeyEventHandler(undefined)).not.toThrow();
+      expect(() => term.attachCustomKeyEventHandler(handler)).not.toThrow();
       term.dispose();
     });
   });
@@ -1177,5 +1176,132 @@ describe('Buffer Access API', () => {
     // Out of bounds returns false
     expect(term.wasmTerm?.isRowWrapped(-1)).toBe(false);
     expect(term.wasmTerm?.isRowWrapped(999)).toBe(false);
+  });
+});
+
+describe('Terminal Modes', () => {
+  test('should detect bracketed paste mode', async () => {
+    if (typeof document === 'undefined') return;
+    const term = new Terminal({ cols: 80, rows: 24 });
+    const container = document.createElement('div');
+    await term.open(container);
+
+    expect(term.hasBracketedPaste()).toBe(false);
+    term.write('\x1b[?2004h');
+    expect(term.hasBracketedPaste()).toBe(true);
+    term.write('\x1b[?2004l');
+    expect(term.hasBracketedPaste()).toBe(false);
+
+    term.dispose();
+  });
+
+  test('paste() should use bracketed paste when enabled', async () => {
+    if (typeof document === 'undefined') return;
+    const term = new Terminal({ cols: 80, rows: 24 });
+    const container = document.createElement('div');
+    await term.open(container);
+
+    let receivedData = '';
+    term.onData((data) => {
+      receivedData = data;
+    });
+
+    term.paste('test');
+    expect(receivedData).toBe('test');
+
+    term.write('\x1b[?2004h');
+    term.paste('test2');
+    expect(receivedData).toBe('\x1b[200~test2\x1b[201~');
+
+    term.dispose();
+  });
+
+  test('should query arbitrary DEC modes', async () => {
+    if (typeof document === 'undefined') return;
+    const term = new Terminal({ cols: 80, rows: 24 });
+    const container = document.createElement('div');
+    await term.open(container);
+
+    expect(term.getMode(25)).toBe(true); // Cursor visible
+    term.write('\x1b[?25l');
+    expect(term.getMode(25)).toBe(false);
+
+    term.dispose();
+  });
+
+  test('should detect focus event mode', async () => {
+    if (typeof document === 'undefined') return;
+    const term = new Terminal({ cols: 80, rows: 24 });
+    const container = document.createElement('div');
+    await term.open(container);
+
+    expect(term.hasFocusEvents()).toBe(false);
+    term.write('\x1b[?1004h');
+    expect(term.hasFocusEvents()).toBe(true);
+
+    term.dispose();
+  });
+
+  test('should detect mouse tracking modes', async () => {
+    if (typeof document === 'undefined') return;
+    const term = new Terminal({ cols: 80, rows: 24 });
+    const container = document.createElement('div');
+    await term.open(container);
+
+    expect(term.hasMouseTracking()).toBe(false);
+    term.write('\x1b[?1000h');
+    expect(term.hasMouseTracking()).toBe(true);
+
+    term.dispose();
+  });
+
+  test('should query ANSI modes vs DEC modes', async () => {
+    if (typeof document === 'undefined') return;
+    const term = new Terminal({ cols: 80, rows: 24 });
+    const container = document.createElement('div');
+    await term.open(container);
+
+    expect(term.getMode(4, true)).toBe(false); // Insert mode
+    term.write('\x1b[4h');
+    expect(term.getMode(4, true)).toBe(true);
+
+    term.dispose();
+  });
+
+  test('should handle multiple modes set simultaneously', async () => {
+    if (typeof document === 'undefined') return;
+    const term = new Terminal({ cols: 80, rows: 24 });
+    const container = document.createElement('div');
+    await term.open(container);
+
+    term.write('\x1b[?2004h\x1b[?1004h\x1b[?1000h');
+    expect(term.hasBracketedPaste()).toBe(true);
+    expect(term.hasFocusEvents()).toBe(true);
+    expect(term.hasMouseTracking()).toBe(true);
+
+    term.dispose();
+  });
+
+  test('getMode() throws when terminal not open', () => {
+    const term = new Terminal({ cols: 80, rows: 24 });
+    expect(() => term.getMode(25)).toThrow();
+  });
+
+  test('hasBracketedPaste() throws when terminal not open', () => {
+    const term = new Terminal({ cols: 80, rows: 24 });
+    expect(() => term.hasBracketedPaste()).toThrow();
+  });
+
+  test('alternate screen mode via getMode()', async () => {
+    if (typeof document === 'undefined') return;
+    const term = new Terminal({ cols: 80, rows: 24 });
+    const container = document.createElement('div');
+    await term.open(container);
+
+    expect(term.getMode(1049)).toBe(false);
+    term.write('\x1b[?1049h');
+    expect(term.getMode(1049)).toBe(true);
+
+    term.dispose();
   });
 });

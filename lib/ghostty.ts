@@ -639,4 +639,36 @@ export class GhosttyTerminal {
       this.exports.ghostty_wasm_free_u8_array(bufferPtr, maxUriLen);
     }
   }
+
+  // ============================================================================
+  // Terminal Modes
+  // ============================================================================
+
+  /**
+   * Query terminal mode state
+   */
+  getMode(mode: number, isAnsi: boolean = false): boolean {
+    return this.exports.ghostty_terminal_get_mode(this.handle, mode, isAnsi ? 1 : 0) !== 0;
+  }
+
+  /**
+   * Check if bracketed paste mode is enabled
+   */
+  hasBracketedPaste(): boolean {
+    return this.exports.ghostty_terminal_has_bracketed_paste(this.handle) !== 0;
+  }
+
+  /**
+   * Check if focus event reporting is enabled
+   */
+  hasFocusEvents(): boolean {
+    return this.exports.ghostty_terminal_has_focus_events(this.handle) !== 0;
+  }
+
+  /**
+   * Check if mouse tracking is enabled
+   */
+  hasMouseTracking(): boolean {
+    return this.exports.ghostty_terminal_has_mouse_tracking(this.handle) !== 0;
+  }
 }

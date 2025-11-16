@@ -353,10 +353,14 @@ export class Terminal implements ITerminalCore {
       return;
     }
 
-    // TODO: Check if terminal has bracketed paste mode enabled
-    // For now, just send the data directly
-    // In full implementation: wrap with \x1b[200~ and \x1b[201~
-    this.dataEmitter.fire(data);
+    // Check if terminal has bracketed paste mode enabled
+    if (this.wasmTerm!.hasBracketedPaste()) {
+      // Wrap with bracketed paste sequences (DEC mode 2004)
+      this.dataEmitter.fire('\x1b[200~' + data + '\x1b[201~');
+    } else {
+      // Send data directly
+      this.dataEmitter.fire(data);
+    }
   }
 
   /**
@@ -1073,5 +1077,45 @@ export class Terminal implements ITerminalCore {
         }
       }
     }
+  }
+
+  // ============================================================================
+  // Terminal Modes
+  // ============================================================================
+
+  /**
+   * Query terminal mode state
+   *
+   * @param mode Mode number (e.g., 2004 for bracketed paste)
+   * @param isAnsi True for ANSI modes, false for DEC modes (default: false)
+   * @returns true if mode is enabled
+   */
+  public getMode(mode: number, isAnsi: boolean = false): boolean {
+    this.assertOpen();
+    return this.wasmTerm!.getMode(mode, isAnsi);
+  }
+
+  /**
+   * Check if bracketed paste mode is enabled
+   */
+  public hasBracketedPaste(): boolean {
+    this.assertOpen();
+    return this.wasmTerm!.hasBracketedPaste();
+  }
+
+  /**
+   * Check if focus event reporting is enabled
+   */
+  public hasFocusEvents(): boolean {
+    this.assertOpen();
+    return this.wasmTerm!.hasFocusEvents();
+  }
+
+  /**
+   * Check if mouse tracking is enabled
+   */
+  public hasMouseTracking(): boolean {
+    this.assertOpen();
+    return this.wasmTerm!.hasMouseTracking();
   }
 }

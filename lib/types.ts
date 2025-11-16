@@ -377,6 +377,10 @@ export interface GhosttyWasmExports extends WebAssembly.Exports {
     bufLen: number
   ): number;
   ghostty_terminal_get_scrollback_length(terminal: TerminalHandle): number;
+  ghostty_terminal_get_mode(terminal: TerminalHandle, mode: number, isAnsi: number): number;
+  ghostty_terminal_has_bracketed_paste(terminal: TerminalHandle): number;
+  ghostty_terminal_has_focus_events(terminal: TerminalHandle): number;
+  ghostty_terminal_has_mouse_tracking(terminal: TerminalHandle): number;
 }
 
 // ============================================================================
@@ -599,4 +603,35 @@ export class EventEmitter<T> {
   public dispose(): void {
     this.listeners = [];
   }
+}
+
+/**
+ * Terminal mode identifiers
+ *
+ * ANSI modes (use with is_ansi = true):
+ * - INSERT = 4
+ *
+ * DEC modes (use with is_ansi = false):
+ * - CURSOR_VISIBLE = 25
+ * - MOUSE_TRACKING_NORMAL = 1000
+ * - MOUSE_TRACKING_BUTTON = 1002
+ * - MOUSE_TRACKING_ANY = 1003
+ * - FOCUS_EVENTS = 1004
+ * - ALT_SCREEN = 1047
+ * - ALT_SCREEN_WITH_CURSOR = 1049
+ * - BRACKETED_PASTE = 2004
+ */
+export enum TerminalMode {
+  // ANSI modes
+  INSERT = 4,
+
+  // DEC modes
+  CURSOR_VISIBLE = 25,
+  MOUSE_TRACKING_NORMAL = 1000,
+  MOUSE_TRACKING_BUTTON = 1002,
+  MOUSE_TRACKING_ANY = 1003,
+  FOCUS_EVENTS = 1004,
+  ALT_SCREEN = 1047,
+  ALT_SCREEN_WITH_CURSOR = 1049,
+  BRACKETED_PASTE = 2004,
 }
