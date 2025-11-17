@@ -73,8 +73,6 @@ describe('Terminal', () => {
     });
 
     test('cannot write after disposal', async () => {
-      if (!container) throw new Error('DOM environment not available - check happydom setup');
-
       const term = new Terminal();
       await term.open(container);
       term.dispose();
@@ -83,8 +81,6 @@ describe('Terminal', () => {
     });
 
     test('cannot open twice', async () => {
-      if (!container) throw new Error('DOM environment not available - check happydom setup');
-
       const term = new Terminal();
       await term.open(container);
 
@@ -94,8 +90,6 @@ describe('Terminal', () => {
     });
 
     test('cannot open after disposal', async () => {
-      if (!container) throw new Error('DOM environment not available - check happydom setup');
-
       const term = new Terminal();
       term.dispose();
 
@@ -111,8 +105,6 @@ describe('Terminal', () => {
     });
 
     test('exposes element after open', async () => {
-      if (!container) throw new Error('DOM environment not available - check happydom setup');
-
       const term = new Terminal();
       expect(term.element).toBeUndefined();
 
@@ -149,8 +141,6 @@ describe('Terminal', () => {
     });
 
     test('onResize fires when terminal is resized', async () => {
-      if (!container) throw new Error('DOM environment not available - check happydom setup');
-
       const term = new Terminal({ cols: 80, rows: 24 });
       await term.open(container);
 
@@ -169,8 +159,6 @@ describe('Terminal', () => {
     });
 
     test('onBell fires on bell character', async () => {
-      if (!container) throw new Error('DOM environment not available - check happydom setup');
-
       const term = new Terminal();
       await term.open(container);
 
@@ -192,8 +180,6 @@ describe('Terminal', () => {
 
   describe('Writing', () => {
     test('write() does not throw after open', async () => {
-      if (!container) throw new Error('DOM environment not available - check happydom setup');
-
       const term = new Terminal();
       await term.open(container);
 
@@ -203,8 +189,6 @@ describe('Terminal', () => {
     });
 
     test('write() accepts string', async () => {
-      if (!container) throw new Error('DOM environment not available - check happydom setup');
-
       const term = new Terminal();
       await term.open(container);
 
@@ -214,8 +198,6 @@ describe('Terminal', () => {
     });
 
     test('write() accepts Uint8Array', async () => {
-      if (!container) throw new Error('DOM environment not available - check happydom setup');
-
       const term = new Terminal();
       await term.open(container);
 
@@ -226,8 +208,6 @@ describe('Terminal', () => {
     });
 
     test('writeln() adds newline', async () => {
-      if (!container) throw new Error('DOM environment not available - check happydom setup');
-
       const term = new Terminal();
       await term.open(container);
 
@@ -239,8 +219,6 @@ describe('Terminal', () => {
 
   describe('Resizing', () => {
     test('resize() updates dimensions', async () => {
-      if (!container) throw new Error('DOM environment not available - check happydom setup');
-
       const term = new Terminal({ cols: 80, rows: 24 });
       await term.open(container);
 
@@ -253,8 +231,6 @@ describe('Terminal', () => {
     });
 
     test('resize() with same dimensions is no-op', async () => {
-      if (!container) throw new Error('DOM environment not available - check happydom setup');
-
       const term = new Terminal({ cols: 80, rows: 24 });
       await term.open(container);
 
@@ -276,8 +252,6 @@ describe('Terminal', () => {
 
   describe('Control Methods', () => {
     test('clear() does not throw', async () => {
-      if (!container) throw new Error('DOM environment not available - check happydom setup');
-
       const term = new Terminal();
       await term.open(container);
 
@@ -287,8 +261,6 @@ describe('Terminal', () => {
     });
 
     test('reset() does not throw', async () => {
-      if (!container) throw new Error('DOM environment not available - check happydom setup');
-
       const term = new Terminal();
       await term.open(container);
 
@@ -298,8 +270,6 @@ describe('Terminal', () => {
     });
 
     test('focus() does not throw', async () => {
-      if (!container) throw new Error('DOM environment not available - check happydom setup');
-
       const term = new Terminal();
       await term.open(container);
 
@@ -316,8 +286,6 @@ describe('Terminal', () => {
 
   describe('Addons', () => {
     test('loadAddon() accepts addon', async () => {
-      if (!container) throw new Error('DOM environment not available - check happydom setup');
-
       const term = new Terminal();
       await term.open(container);
 
@@ -336,8 +304,6 @@ describe('Terminal', () => {
     });
 
     test('loadAddon() calls activate', async () => {
-      if (!container) throw new Error('DOM environment not available - check happydom setup');
-
       const term = new Terminal();
       await term.open(container);
 
@@ -357,8 +323,6 @@ describe('Terminal', () => {
     });
 
     test('dispose() calls addon dispose', async () => {
-      if (!container) throw new Error('DOM environment not available - check happydom setup');
-
       const term = new Terminal();
       await term.open(container);
 
@@ -379,8 +343,6 @@ describe('Terminal', () => {
 
   describe('Integration', () => {
     test('can write ANSI sequences', async () => {
-      if (!container) throw new Error('DOM environment not available - check happydom setup');
-
       const term = new Terminal();
       await term.open(container);
 
@@ -393,8 +355,6 @@ describe('Terminal', () => {
     });
 
     test('can handle cursor movement sequences', async () => {
-      if (!container) throw new Error('DOM environment not available - check happydom setup');
-
       const term = new Terminal();
       await term.open(container);
 
@@ -406,8 +366,6 @@ describe('Terminal', () => {
     });
 
     test('multiple write calls work', async () => {
-      if (!container) throw new Error('DOM environment not available - check happydom setup');
-
       const term = new Terminal();
       await term.open(container);
 
@@ -423,8 +381,6 @@ describe('Terminal', () => {
 
   describe('Disposal', () => {
     test('dispose() can be called multiple times', async () => {
-      if (!container) throw new Error('DOM environment not available - check happydom setup');
-
       const term = new Terminal();
       await term.open(container);
 
@@ -433,8 +389,6 @@ describe('Terminal', () => {
     });
 
     test('dispose() cleans up canvas element', async () => {
-      if (!container) throw new Error('DOM environment not available - check happydom setup');
-
       const term = new Terminal();
       await term.open(container);
 

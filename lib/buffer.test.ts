@@ -33,25 +33,20 @@ describe('Buffer API', () => {
 
   describe('BufferNamespace', () => {
     test('should have buffer property', () => {
-      if (!term) throw new Error('DOM environment not available - check happydom setup');
-      if (!term) throw new Error('DOM environment not available - check happydom setup');
       expect(term.buffer).toBeDefined();
     });
 
     test('should have active, normal, and alternate buffers', () => {
-      if (!term) throw new Error('DOM environment not available - check happydom setup');
       expect(term.buffer.active).toBeDefined();
       expect(term.buffer.normal).toBeDefined();
       expect(term.buffer.alternate).toBeDefined();
     });
 
     test('active buffer should be normal by default', () => {
-      if (!term) throw new Error('DOM environment not available - check happydom setup');
       expect(term.buffer.active.type).toBe('normal');
     });
 
     test('should switch to alternate buffer', () => {
-      if (!term) throw new Error('DOM environment not available - check happydom setup');
       // Enter alternate screen (smcup)
       term.write('\x1b[?1049h');
 
@@ -60,7 +55,6 @@ describe('Buffer API', () => {
     });
 
     test('should switch back to normal buffer', () => {
-      if (!term) throw new Error('DOM environment not available - check happydom setup');
       // Enter alternate screen
       term.write('\x1b[?1049h');
       expect(term.buffer.active.type).toBe('alternate');
@@ -73,13 +67,11 @@ describe('Buffer API', () => {
 
   describe('Buffer', () => {
     test('should have correct type', () => {
-      if (!term) throw new Error('DOM environment not available - check happydom setup');
       expect(term.buffer.normal.type).toBe('normal');
       expect(term.buffer.alternate.type).toBe('alternate');
     });
 
     test('should track cursor position', () => {
-      if (!term) throw new Error('DOM environment not available - check happydom setup');
       term.write('Hello');
       const buffer = term.buffer.active;
 
@@ -88,7 +80,6 @@ describe('Buffer API', () => {
     });
 
     test('should track cursor position after newline', () => {
-      if (!term) throw new Error('DOM environment not available - check happydom setup');
       term.write('Hello\r\nWorld');
       const buffer = term.buffer.active;
 
@@ -97,13 +88,11 @@ describe('Buffer API', () => {
     });
 
     test('should have correct length', () => {
-      if (!term) throw new Error('DOM environment not available - check happydom setup');
       const buffer = term.buffer.normal;
       expect(buffer.length).toBeGreaterThanOrEqual(24);
     });
 
     test('should return null cell', () => {
-      if (!term) throw new Error('DOM environment not available - check happydom setup');
       const buffer = term.buffer.active;
       const nullCell = buffer.getNullCell();
 
@@ -115,7 +104,6 @@ describe('Buffer API', () => {
 
   describe('BufferLine', () => {
     test('should get line from buffer', () => {
-      if (!term) throw new Error('DOM environment not available - check happydom setup');
       term.write('Hello, World!');
       const buffer = term.buffer.active;
       const line = buffer.getLine(0);
@@ -125,7 +113,6 @@ describe('Buffer API', () => {
     });
 
     test('should return undefined for out of bounds line', () => {
-      if (!term) throw new Error('DOM environment not available - check happydom setup');
       const buffer = term.buffer.active;
       const line = buffer.getLine(10000);
 
@@ -133,7 +120,6 @@ describe('Buffer API', () => {
     });
 
     test('should have correct isWrapped flag', () => {
-      if (!term) throw new Error('DOM environment not available - check happydom setup');
       // Write a short line (should not wrap)
       term.write('Short line');
       const buffer = term.buffer.active;
@@ -144,7 +130,6 @@ describe('Buffer API', () => {
     });
 
     test('translateToString should return line content', () => {
-      if (!term) throw new Error('DOM environment not available - check happydom setup');
       term.write('Hello, World!');
       const buffer = term.buffer.active;
       const line = buffer.getLine(0);
@@ -154,7 +139,6 @@ describe('Buffer API', () => {
     });
 
     test('translateToString should trim right when requested', () => {
-      if (!term) throw new Error('DOM environment not available - check happydom setup');
       term.write('Hello');
       const buffer = term.buffer.active;
       const line = buffer.getLine(0);
@@ -165,7 +149,6 @@ describe('Buffer API', () => {
     });
 
     test('translateToString should respect startColumn and endColumn', () => {
-      if (!term) throw new Error('DOM environment not available - check happydom setup');
       term.write('Hello, World!');
       const buffer = term.buffer.active;
       const line = buffer.getLine(0);
@@ -177,7 +160,6 @@ describe('Buffer API', () => {
 
   describe('BufferCell', () => {
     test('should get cell from line', () => {
-      if (!term) throw new Error('DOM environment not available - check happydom setup');
       term.write('Hello');
       const buffer = term.buffer.active;
       const line = buffer.getLine(0);
@@ -187,7 +169,6 @@ describe('Buffer API', () => {
     });
 
     test('should return undefined for out of bounds cell', () => {
-      if (!term) throw new Error('DOM environment not available - check happydom setup');
       term.write('Hello');
       const buffer = term.buffer.active;
       const line = buffer.getLine(0);
@@ -197,7 +178,6 @@ describe('Buffer API', () => {
     });
 
     test('getChars should return character', () => {
-      if (!term) throw new Error('DOM environment not available - check happydom setup');
       term.write('H');
       const buffer = term.buffer.active;
       const line = buffer.getLine(0);
@@ -207,7 +187,6 @@ describe('Buffer API', () => {
     });
 
     test('getCode should return codepoint', () => {
-      if (!term) throw new Error('DOM environment not available - check happydom setup');
       term.write('A');
       const buffer = term.buffer.active;
       const line = buffer.getLine(0);
@@ -217,7 +196,6 @@ describe('Buffer API', () => {
     });
 
     test('getWidth should return 1 for normal characters', () => {
-      if (!term) throw new Error('DOM environment not available - check happydom setup');
       term.write('A');
       const buffer = term.buffer.active;
       const line = buffer.getLine(0);
@@ -227,7 +205,6 @@ describe('Buffer API', () => {
     });
 
     test('should detect bold text', () => {
-      if (!term) throw new Error('DOM environment not available - check happydom setup');
       term.write('\x1b[1mBold\x1b[0m');
       const buffer = term.buffer.active;
       const line = buffer.getLine(0);
@@ -237,7 +214,6 @@ describe('Buffer API', () => {
     });
 
     test('should detect italic text', () => {
-      if (!term) throw new Error('DOM environment not available - check happydom setup');
       term.write('\x1b[3mItalic\x1b[0m');
       const buffer = term.buffer.active;
       const line = buffer.getLine(0);
@@ -247,7 +223,6 @@ describe('Buffer API', () => {
     });
 
     test('should detect underline text', () => {
-      if (!term) throw new Error('DOM environment not available - check happydom setup');
       term.write('\x1b[4mUnderline\x1b[0m');
       const buffer = term.buffer.active;
       const line = buffer.getLine(0);
@@ -257,7 +232,6 @@ describe('Buffer API', () => {
     });
 
     test('should detect strikethrough text', () => {
-      if (!term) throw new Error('DOM environment not available - check happydom setup');
       term.write('\x1b[9mStrike\x1b[0m');
       const buffer = term.buffer.active;
       const line = buffer.getLine(0);
@@ -267,7 +241,6 @@ describe('Buffer API', () => {
     });
 
     test('should detect blink text', () => {
-      if (!term) throw new Error('DOM environment not available - check happydom setup');
       term.write('\x1b[5mBlink\x1b[0m');
       const buffer = term.buffer.active;
       const line = buffer.getLine(0);
@@ -277,7 +250,6 @@ describe('Buffer API', () => {
     });
 
     test('should detect inverse text', () => {
-      if (!term) throw new Error('DOM environment not available - check happydom setup');
       term.write('\x1b[7mInverse\x1b[0m');
       const buffer = term.buffer.active;
       const line = buffer.getLine(0);
@@ -287,7 +259,6 @@ describe('Buffer API', () => {
     });
 
     test('should detect invisible text', () => {
-      if (!term) throw new Error('DOM environment not available - check happydom setup');
       term.write('\x1b[8mInvisible\x1b[0m');
       const buffer = term.buffer.active;
       const line = buffer.getLine(0);
@@ -297,7 +268,6 @@ describe('Buffer API', () => {
     });
 
     test('should detect faint text', () => {
-      if (!term) throw new Error('DOM environment not available - check happydom setup');
       term.write('\x1b[2mFaint\x1b[0m');
       const buffer = term.buffer.active;
       const line = buffer.getLine(0);
@@ -307,7 +277,6 @@ describe('Buffer API', () => {
     });
 
     test('should return RGB foreground color', () => {
-      if (!term) throw new Error('DOM environment not available - check happydom setup');
       term.write('\x1b[31mRed\x1b[0m'); // ANSI red
       const buffer = term.buffer.active;
       const line = buffer.getLine(0);
@@ -318,7 +287,6 @@ describe('Buffer API', () => {
     });
 
     test('should return RGB background color', () => {
-      if (!term) throw new Error('DOM environment not available - check happydom setup');
       term.write('\x1b[41mRed BG\x1b[0m'); // ANSI red background
       const buffer = term.buffer.active;
       const line = buffer.getLine(0);
@@ -329,7 +297,6 @@ describe('Buffer API', () => {
     });
 
     test('empty cell should return empty string', () => {
-      if (!term) throw new Error('DOM environment not available - check happydom setup');
       // Get a cell that was never written to
       const buffer = term.buffer.active;
       const line = buffer.getLine(0);
@@ -342,7 +309,6 @@ describe('Buffer API', () => {
 
   describe('Multi-line content', () => {
     test('should handle multiple lines correctly', () => {
-      if (!term) throw new Error('DOM environment not available - check happydom setup');
       term.write('Line 1\r\n');
       term.write('Line 2\r\n');
       term.write('Line 3');
@@ -359,7 +325,6 @@ describe('Buffer API', () => {
     });
 
     test('should handle colored multi-line content', () => {
-      if (!term) throw new Error('DOM environment not available - check happydom setup');
       term.write('\x1b[31mRed line\x1b[0m\r\n');
       term.write('\x1b[32mGreen line\x1b[0m\r\n');
       term.write('\x1b[34mBlue line\x1b[0m');
@@ -383,7 +348,6 @@ describe('Buffer API', () => {
 
   describe('Unicode support', () => {
     test('should handle emoji correctly', () => {
-      if (!term) throw new Error('DOM environment not available - check happydom setup');
       term.write('😀');
       const buffer = term.buffer.active;
       const line = buffer.getLine(0);
@@ -394,7 +358,6 @@ describe('Buffer API', () => {
     });
 
     test('should handle accented characters', () => {
-      if (!term) throw new Error('DOM environment not available - check happydom setup');
       term.write('Héllo');
       const buffer = term.buffer.active;
       const line = buffer.getLine(0);
@@ -403,7 +366,6 @@ describe('Buffer API', () => {
     });
 
     test('should handle various Unicode characters', () => {
-      if (!term) throw new Error('DOM environment not available - check happydom setup');
       term.write('日本語');
       const buffer = term.buffer.active;
       const line = buffer.getLine(0);
@@ -414,7 +376,6 @@ describe('Buffer API', () => {
 
   describe('Edge cases', () => {
     test('should handle empty buffer', () => {
-      if (!term) throw new Error('DOM environment not available - check happydom setup');
       const buffer = term.buffer.active;
       const line = buffer.getLine(0);
 
@@ -423,7 +384,6 @@ describe('Buffer API', () => {
     });
 
     test('should handle full line of text', () => {
-      if (!term) throw new Error('DOM environment not available - check happydom setup');
       // Write exactly 80 characters
       const fullLine = 'A'.repeat(80);
       term.write(fullLine);
@@ -435,7 +395,6 @@ describe('Buffer API', () => {
     });
 
     test('should handle cursor at end of line', () => {
-      if (!term) throw new Error('DOM environment not available - check happydom setup');
       term.write('X'.repeat(80));
       const buffer = term.buffer.active;
 
@@ -445,7 +404,6 @@ describe('Buffer API', () => {
     });
 
     test('should handle multiple style attributes', () => {
-      if (!term) throw new Error('DOM environment not available - check happydom setup');
       term.write('\x1b[1;3;4mBold+Italic+Underline\x1b[0m');
       const buffer = term.buffer.active;
       const line = buffer.getLine(0);
