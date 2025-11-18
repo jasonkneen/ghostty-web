@@ -103,7 +103,11 @@ export class Terminal implements ITerminalCore {
   private currentTitle: string = '';
 
   // Phase 2: Viewport and scrolling state
-  private viewportY: number = 0; // Top line of viewport in scrollback buffer (0 = at bottom)
+  private viewportY: number = 0; // Top line of viewport in scrollback buffer (0 = at bottom, can be fractional during smooth scroll)
+  private targetViewportY: number = 0; // Target viewport position for smooth scrolling
+  private scrollAnimationStartTime?: number;
+  private scrollAnimationStartY?: number;
+  private scrollAnimationFrame?: number;
   private customWheelEventHandler?: (event: WheelEvent) => boolean;
   private lastCursorY: number = 0; // Track cursor position for onCursorMove
 
@@ -133,6 +137,7 @@ export class Terminal implements ITerminalCore {
       allowTransparency: options.allowTransparency ?? false,
       convertEol: options.convertEol ?? false,
       disableStdin: options.disableStdin ?? false,
+      smoothScrollDuration: options.smoothScrollDuration ?? 100, // Default: 100ms smooth scroll
       wasmPath: options.wasmPath, // Optional - Ghostty.load() handles defaults
     };
 
@@ -704,6 +709,101 @@ export class Terminal implements ITerminalCore {
     }
   }
 
+  /**
+   * Smoothly scroll to a target viewport position
+   * @param targetY Target viewport Y position (in lines, can be fractional)
+   */
+  private smoothScrollTo(targetY: number): void {
+    if (!this.wasmTerm) return;
+
+    const scrollbackLength = this.getScrollbackLength();
+    const maxScroll = scrollbackLength;
+
+    // Clamp target to valid range
+    const newTarget = Math.max(0, Math.min(maxScroll, targetY));
+
+    // If smooth scrolling is disabled (duration = 0), jump immediately
+    const duration = this.options.smoothScrollDuration ?? 100;
+    if (duration === 0) {
+      this.viewportY = newTarget;
+      this.targetViewportY = newTarget;
+      this.scrollEmitter.fire(Math.floor(this.viewportY));
+
+      if (scrollbackLength > 0) {
+        this.showScrollbar();
+      }
+      return;
+    }
+
+    // Update target (accumulate if animation running)
+    this.targetViewportY = newTarget;
+
+    // If animation is already running, don't restart it
+    // Just let it continue toward the updated target
+    // This prevents choppy restarts during continuous scrolling
+    if (this.scrollAnimationFrame) {
+      return;
+    }
+
+    // Start new animation
+    this.scrollAnimationStartTime = Date.now();
+    this.scrollAnimationStartY = this.viewportY;
+    this.animateScroll();
+  }
+
+  /**
+   * Animation loop for smooth scrolling
+   * Uses asymptotic approach - moves a fraction of remaining distance each frame
+   */
+  private animateScroll = (): void => {
+    if (!this.wasmTerm || this.scrollAnimationStartTime === undefined) {
+      return;
+    }
+
+    const duration = this.options.smoothScrollDuration ?? 100;
+
+    // Calculate distance to target
+    const distance = this.targetViewportY - this.viewportY;
+    const absDistance = Math.abs(distance);
+
+    // If very close, snap to target
+    if (absDistance < 0.01) {
+      this.viewportY = this.targetViewportY;
+      this.scrollEmitter.fire(Math.floor(this.viewportY));
+
+      const scrollbackLength = this.getScrollbackLength();
+      if (scrollbackLength > 0) {
+        this.showScrollbar();
+      }
+
+      // Animation complete
+      this.scrollAnimationFrame = undefined;
+      this.scrollAnimationStartTime = undefined;
+      this.scrollAnimationStartY = undefined;
+      return;
+    }
+
+    // Move a fraction of the remaining distance
+    // At 60fps, move ~1/6 of distance per frame for ~100ms total duration
+    // This creates smooth deceleration toward target
+    const framesForDuration = (duration / 1000) * 60; // Convert ms to frame count
+    const moveRatio = 1 - (1 / framesForDuration) ** 2; // Ease-out
+    this.viewportY += distance * moveRatio;
+
+    // Fire scroll event (use floor to convert fractional to integer for API)
+    const intViewportY = Math.floor(this.viewportY);
+    this.scrollEmitter.fire(intViewportY);
+
+    // Show scrollbar during animation
+    const scrollbackLength = this.getScrollbackLength();
+    if (scrollbackLength > 0) {
+      this.showScrollbar();
+    }
+
+    // Continue animation
+    this.scrollAnimationFrame = requestAnimationFrame(this.animateScroll);
+  };
+
   // ==========================================================================
   // Lifecycle
   // ==========================================================================
@@ -723,6 +823,12 @@ export class Terminal implements ITerminalCore {
     if (this.animationFrameId) {
       cancelAnimationFrame(this.animationFrameId);
       this.animationFrameId = undefined;
+    }
+
+    // Stop smooth scroll animation
+    if (this.scrollAnimationFrame) {
+      cancelAnimationFrame(this.scrollAnimationFrame);
+      this.scrollAnimationFrame = undefined;
     }
 
     // Clear mouse move throttle timeout
@@ -1142,12 +1248,33 @@ export class Terminal implements ITerminalCore {
         }
       }
     } else {
-      // Normal screen: scroll viewport through history
-      // deltaY > 0 = scroll down, < 0 = scroll up
-      // Typical wheel delta is ±100 per "click", scale to 3 lines per click
-      const lines = Math.round(e.deltaY / 33); // ~3 lines per wheel click
-      if (lines !== 0) {
-        this.scrollLines(lines);
+      // Normal screen: scroll viewport through history with smooth scrolling
+      // Handle different deltaMode values for better trackpad/mouse support
+      let deltaLines: number;
+
+      if (e.deltaMode === WheelEvent.DOM_DELTA_PIXEL) {
+        // Pixel mode (trackpads): convert pixels to lines
+        // Use actual line height from renderer for accurate conversion
+        const lineHeight = this.renderer?.getMetrics()?.height ?? 20;
+        deltaLines = e.deltaY / lineHeight;
+      } else if (e.deltaMode === WheelEvent.DOM_DELTA_LINE) {
+        // Line mode (some mice): use directly
+        deltaLines = e.deltaY;
+      } else if (e.deltaMode === WheelEvent.DOM_DELTA_PAGE) {
+        // Page mode (rare): convert pages to lines
+        deltaLines = e.deltaY * this.rows;
+      } else {
+        // Fallback: assume pixel mode with legacy divisor
+        deltaLines = e.deltaY / 33;
+      }
+
+      // Use smooth scrolling for any amount (no rounding needed)
+      if (deltaLines !== 0) {
+        // Calculate target position
+        // deltaY > 0 = scroll down (decrease viewportY)
+        // deltaY < 0 = scroll up (increase viewportY)
+        const targetY = this.viewportY - deltaLines;
+        this.smoothScrollTo(targetY);
       }
     }
   };

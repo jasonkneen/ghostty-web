@@ -336,11 +336,12 @@ export class CanvasRenderer {
         if (viewportY > 0) {
           if (y < viewportY && scrollbackProvider) {
             // This row is from scrollback
-            const scrollbackOffset = scrollbackLength - viewportY + y;
+            // Floor viewportY for array access (handles fractional values during smooth scroll)
+            const scrollbackOffset = scrollbackLength - Math.floor(viewportY) + y;
             line = scrollbackProvider.getScrollbackLine(scrollbackOffset);
           } else {
             // This row is from visible screen
-            const screenRow = y - viewportY;
+            const screenRow = y - Math.floor(viewportY);
             line = buffer.getLine(screenRow);
           }
         } else {
@@ -413,11 +414,12 @@ export class CanvasRenderer {
         if (y < viewportY && scrollbackProvider) {
           // This row is from scrollback (upper part of viewport)
           // Get from end of scrollback buffer
-          const scrollbackOffset = scrollbackLength - viewportY + y;
+          // Floor viewportY for array access (handles fractional values during smooth scroll)
+          const scrollbackOffset = scrollbackLength - Math.floor(viewportY) + y;
           line = scrollbackProvider.getScrollbackLine(scrollbackOffset);
         } else {
           // This row is from visible screen (lower part of viewport)
-          const screenRow = viewportY > 0 ? y - viewportY : y;
+          const screenRow = viewportY > 0 ? y - Math.floor(viewportY) : y;
           line = buffer.getLine(screenRow);
         }
       } else {
