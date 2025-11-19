@@ -37,7 +37,7 @@
   },
   "bugs": "https://github.com/coder/ghostty-web/issues",
   "homepage": "https://github.com/coder/ghostty-web#readme",
-  "license": "AGPL-3.0",
+  "license": "MIT",
   "author": "Coder",
   "publishConfig": {
     "access": "public"
