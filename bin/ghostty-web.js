@@ -31,7 +31,7 @@ const HTML_TEMPLATE = `<!doctype html>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ghostty-web demo</title>
+    <title>ghostty-web</title>
     <style>
       * {
         margin: 0;
@@ -145,7 +145,8 @@ const HTML_TEMPLATE = `<!doctype html>
     </div>
 
     <script type="module">
-      import { Terminal, FitAddon } from './ghostty-web.js';
+      import { Terminal } from './ghostty-web.js';
+      import { FitAddon } from './ghostty-web.js';
 
       let term;
       let ws;
@@ -169,22 +170,32 @@ const HTML_TEMPLATE = `<!doctype html>
         await term.open(document.getElementById('terminal-container'));
         fitAddon.fit();
 
+        // Handle window resize
         window.addEventListener('resize', () => {
           fitAddon.fit();
         });
 
+        // Connect to PTY server
         connectWebSocket();
 
+        // Handle user input
         term.onData((data) => {
-          console.log('Sending input:', JSON.stringify(data), 'bytes:', data.length);
           if (ws && ws.readyState === WebSocket.OPEN) {
             ws.send(data);
           }
         });
+
+        // Debug scrollback
+        console.log('Terminal scrollback:', term.buffer?.scrollback?.length || 'N/A');
+        term.onScroll((ydisp) => {
+          console.log('Scroll position:', ydisp);
+        });
       }
 
       function connectWebSocket() {
-        const wsUrl = \`ws://\${location.hostname}:8080/ws?cols=\${term.cols}&rows=\${term.rows}\`;
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsUrl = \`\${protocol}//\${window.location.hostname}:8080/ws?cols=\${term.cols}&rows=\${term.rows}\`;
+
         ws = new WebSocket(wsUrl);
 
         ws.onopen = () => {
@@ -193,7 +204,7 @@ const HTML_TEMPLATE = `<!doctype html>
         };
 
         ws.onmessage = (event) => {
-          console.log('Received data:', event.data.length, 'bytes:', JSON.stringify(event.data.slice(0, 100)));
+          // Server sends raw strings, not JSON
           term.write(event.data);
         };
 
@@ -206,6 +217,7 @@ const HTML_TEMPLATE = `<!doctype html>
           console.log('WebSocket disconnected');
           updateConnectionStatus(false);
 
+          // Attempt to reconnect after 3 seconds
           setTimeout(() => {
             if (!ws || ws.readyState === WebSocket.CLOSED) {
               connectWebSocket();
@@ -213,8 +225,10 @@ const HTML_TEMPLATE = `<!doctype html>
           }, 3000);
         };
 
+        // Handle terminal resize
         term.onResize((size) => {
           if (ws && ws.readyState === WebSocket.OPEN) {
+            // Send resize as control sequence (server expects this format)
             ws.send(JSON.stringify({ type: 'resize', cols: size.cols, rows: size.rows }));
           }
         });
@@ -233,6 +247,7 @@ const HTML_TEMPLATE = `<!doctype html>
         }
       }
 
+      // Initialize on load
       initTerminal();
     </script>
   </body>
