@@ -269,11 +269,14 @@ class MinimalWebSocket {
   }
 
   handleData(data) {
+    console.log('[WS] Raw data received:', data.length, 'bytes:', data.toString('hex').slice(0, 40));
     this.buffer = Buffer.concat([this.buffer, data]);
 
     while (this.buffer.length >= 2) {
       const frame = this.parseFrame();
       if (!frame) break;
+
+      console.log('[WS] Parsed frame - opcode:', '0x' + frame.opcode.toString(16), 'payload:', JSON.stringify(frame.payload.toString('utf8')));
 
       if (frame.opcode === 0x01) {
         // Text frame
@@ -448,6 +451,7 @@ function handlePTYSession(ws, req) {
       str = str.replace(/\x1b\]1;[^\x07]*\x07/g, ''); // OSC 1 - icon
       str = str.replace(/\x1b\]2;[^\x07]*\x07/g, ''); // OSC 2 - title
       
+      console.log('[PTY] Sending to client:', str.length, 'bytes:', JSON.stringify(str.slice(0, 50)));
       ws.send(str);
     } catch (err) {
       // WebSocket may be closed
@@ -474,6 +478,7 @@ function handlePTYSession(ws, req) {
       }
     } catch {
       // Not JSON, treat as input
+      console.log('[PTY] Writing to stdin:', JSON.stringify(data), 'hex:', Buffer.from(data).toString('hex'));
       try {
         ptyProcess.stdin.write(data);
       } catch (err) {
