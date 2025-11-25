@@ -42,6 +42,7 @@ export class SelectionManager {
   private selectionStart: { col: number; row: number } | null = null;
   private selectionEnd: { col: number; row: number } | null = null;
   private isSelecting: boolean = false;
+  private justFinishedSelecting: boolean = false; // Brief flag to prevent click from clearing selection
 
   // Track rows that need redraw for clearing old selection
   // Using a Set prevents the overwrite bug where mousemove would clobber
@@ -482,6 +483,13 @@ export class SelectionManager {
         this.isSelecting = false;
         this.stopAutoScroll();
 
+        // Set a brief flag to prevent the click handler from immediately clearing
+        // the selection (click events fire shortly after mouseup)
+        this.justFinishedSelecting = true;
+        setTimeout(() => {
+          this.justFinishedSelecting = false;
+        }, 100);
+
         const text = this.getSelection();
         if (text) {
           this.copyToClipboard(text);
@@ -574,6 +582,12 @@ export class SelectionManager {
     // Click outside canvas - clear selection
     // This allows users to deselect by clicking anywhere outside the terminal
     this.boundClickHandler = (e: MouseEvent) => {
+      // Don't clear selection if we're actively selecting or just finished
+      // (click events can fire shortly after mouseup from drag selection)
+      if (this.isSelecting || this.justFinishedSelecting) {
+        return;
+      }
+
       // Check if the click is outside the canvas
       const target = e.target as Node;
       if (!canvas.contains(target)) {
