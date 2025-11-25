@@ -43,7 +43,8 @@ function findGhosttyWeb() {
   // Use require.resolve to find the installed ghostty-web package
   try {
     const ghosttyWebMain = require.resolve('ghostty-web');
-    const ghosttyWebRoot = path.dirname(ghosttyWebMain.replace(/[/\\]dist[/\\].*$/, ''));
+    // Strip dist/... from path to get package root (regex already gives us the root)
+    const ghosttyWebRoot = ghosttyWebMain.replace(/[/\\]dist[/\\].*$/, '');
     const distPath = path.join(ghosttyWebRoot, 'dist');
     const wasmPath = path.join(ghosttyWebRoot, 'ghostty-vt.wasm');
 
