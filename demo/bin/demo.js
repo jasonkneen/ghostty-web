@@ -160,11 +160,16 @@ const HTML_TEMPLATE = `<!doctype html>
         padding: 0;
         min-height: 400px;
         height: 60vh;
+        position: relative;
       }
 
       #terminal {
-        width: 100%;
-        height: 100%;
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        overflow: hidden;
       }
     </style>
   </head>
@@ -203,6 +208,7 @@ const HTML_TEMPLATE = `<!doctype html>
       const container = document.getElementById('terminal');
       await term.open(container);
       fitAddon.fit();
+      fitAddon.observeResize(); // Auto-fit when container resizes
 
       // Status elements
       const statusDot = document.getElementById('status-dot');
@@ -249,12 +255,16 @@ const HTML_TEMPLATE = `<!doctype html>
         }
       });
 
-      // Handle resize
+      // Handle resize - notify PTY when terminal dimensions change
+      term.onResize(({ cols, rows }) => {
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({ type: 'resize', cols, rows }));
+        }
+      });
+
+      // Also handle window resize (for browsers that don't trigger ResizeObserver on window resize)
       window.addEventListener('resize', () => {
         fitAddon.fit();
-        if (ws && ws.readyState === WebSocket.OPEN) {
-          ws.send(JSON.stringify({ type: 'resize', cols: term.cols, rows: term.rows }));
-        }
       });
     </script>
   </body>
