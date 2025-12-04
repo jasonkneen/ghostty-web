@@ -2462,6 +2462,99 @@ describe('Options Proxy handleOptionChange', () => {
 
     expect(term.options.cursorStyle).toBe('underline');
   });
+
+  test('changing fontSize updates renderer and resizes canvas', async () => {
+    if (!container) return;
+
+    const term = await createIsolatedTerminal({ fontSize: 15, cols: 80, rows: 24 });
+    term.open(container);
+
+    // @ts-ignore - accessing private for test
+    const renderer = term.renderer;
+
+    // Verify initial font size
+    // @ts-ignore - accessing private for test
+    expect(renderer.fontSize).toBe(15);
+
+    // Change font size
+    term.options.fontSize = 20;
+
+    // Verify option was updated
+    expect(term.options.fontSize).toBe(20);
+
+    // Verify renderer's internal fontSize was updated
+    // @ts-ignore - accessing private for test
+    expect(renderer.fontSize).toBe(20);
+
+    // Verify metrics were recalculated (getMetrics returns a copy)
+    const metrics = renderer.getMetrics();
+    expect(metrics).toBeDefined();
+    expect(metrics.width).toBeGreaterThan(0);
+    expect(metrics.height).toBeGreaterThan(0);
+
+    term.dispose();
+  });
+
+  test('changing fontFamily updates renderer', async () => {
+    if (!container) return;
+
+    const term = await createIsolatedTerminal({ fontFamily: 'monospace', cols: 80, rows: 24 });
+    term.open(container);
+
+    // @ts-ignore - accessing private for test
+    const renderer = term.renderer;
+
+    // Change font family
+    term.options.fontFamily = 'Courier New, monospace';
+
+    // Verify option was updated
+    expect(term.options.fontFamily).toBe('Courier New, monospace');
+
+    // Verify renderer was updated
+    // @ts-ignore - accessing private for test
+    expect(renderer.fontFamily).toBe('Courier New, monospace');
+
+    term.dispose();
+  });
+
+  test('font change clears active selection', async () => {
+    if (!container) return;
+
+    const term = await createIsolatedTerminal({ fontSize: 15, cols: 80, rows: 24 });
+    term.open(container);
+
+    // Write some text and select it
+    term.write('Hello World');
+    term.select(0, 0, 5); // Select "Hello"
+    expect(term.hasSelection()).toBe(true);
+
+    // Change font size
+    term.options.fontSize = 20;
+
+    // Selection should be cleared (pixel positions changed)
+    expect(term.hasSelection()).toBe(false);
+
+    term.dispose();
+  });
+
+  test('font change maintains terminal dimensions (cols/rows)', async () => {
+    if (!container) return;
+
+    const term = await createIsolatedTerminal({ fontSize: 15, cols: 80, rows: 24 });
+    term.open(container);
+
+    const initialCols = term.cols;
+    const initialRows = term.rows;
+
+    // Change font size
+    term.options.fontSize = 20;
+
+    // Cols and rows should remain the same (canvas grows instead)
+    expect(term.cols).toBe(initialCols);
+    expect(term.rows).toBe(initialRows);
+
+    term.dispose();
+  });
 });
 
 // ==========================================================================

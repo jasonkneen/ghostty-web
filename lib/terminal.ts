@@ -206,9 +206,16 @@ export class Terminal implements ITerminalCore {
         break;
 
       case 'fontSize':
+        if (this.renderer) {
+          this.renderer.setFontSize(this.options.fontSize);
+          this.handleFontChange();
+        }
+        break;
+
       case 'fontFamily':
         if (this.renderer) {
-          console.warn('ghostty-web: font changes after open() are not yet fully supported');
+          this.renderer.setFontFamily(this.options.fontFamily);
+          this.handleFontChange();
         }
         break;
 
@@ -218,6 +225,32 @@ export class Terminal implements ITerminalCore {
         this.resize(this.options.cols, this.options.rows);
         break;
     }
+  }
+
+  /**
+   * Handle font changes (fontSize or fontFamily)
+   * Updates canvas size to match new font metrics and forces a full re-render
+   */
+  private handleFontChange(): void {
+    if (!this.renderer || !this.wasmTerm || !this.canvas) return;
+
+    // Clear any active selection since pixel positions have changed
+    if (this.selectionManager) {
+      this.selectionManager.clearSelection();
+    }
+
+    // Resize canvas to match new font metrics
+    this.renderer.resize(this.cols, this.rows);
+
+    // Update canvas element dimensions to match renderer
+    const metrics = this.renderer.getMetrics();
+    this.canvas.width = metrics.width * this.cols;
+    this.canvas.height = metrics.height * this.rows;
+    this.canvas.style.width = `${metrics.width * this.cols}px`;
+    this.canvas.style.height = `${metrics.height * this.rows}px`;
+
+    // Force full re-render with new font
+    this.renderer.render(this.wasmTerm, true, this.viewportY, this);
   }
 
   /**
